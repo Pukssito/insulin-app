@@ -1,0 +1,25 @@
+# Node / Angular / Ionic
+node_modules/
+dist/
+www/
+
+# Capacitor / Android
+android/app/build/
+android/build/
+android/.gradle/
+android/.idea/
+android/local.properties
+*.keystore
+*.jks
+
+# iOS (si lo añades)
+ios/build/
+ios/Pods/
+ios/*.xcworkspace
+ios/*.xcodeproj/project.xcworkspace/
+ios/*.xcodeproj/xcuserdata/
+
+# OS/editor
+.DS_Store
+Thumbs.db
+.vscode/

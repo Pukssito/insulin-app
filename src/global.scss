@@ -1,0 +1,82 @@
+/* Ionic core y CSS básico */
+@import "@ionic/angular/css/core.css";
+@import "@ionic/angular/css/normalize.css";
+@import "@ionic/angular/css/structure.css";
+@import "@ionic/angular/css/typography.css";
+
+/* Utilidades opcionales */
+@import "@ionic/angular/css/padding.css";
+@import "@ionic/angular/css/float-elements.css";
+@import "@ionic/angular/css/text-alignment.css";
+@import "@ionic/angular/css/text-transformation.css";
+@import "@ionic/angular/css/flex-utils.css";
+@import "@ionic/angular/css/display.css";
+
+/* Modo oscuro suave */
+:root {
+  color-scheme: dark;
+
+  /* Color de acento */
+  --ion-color-primary: #4db6ac; /* Verde azulado suave */
+  --ion-color-primary-rgb: 77, 182, 172;
+  --ion-color-primary-contrast: #ffffff;
+  --ion-color-primary-contrast-rgb: 255, 255, 255;
+  --ion-color-primary-shade: #439f96;
+  --ion-color-primary-tint: #66c0b8;
+}
+
+/* Fondo general */
+body {
+  --ion-background-color: #222831; /* gris azulado oscuro */
+  --ion-text-color: #eeeeee; /* texto gris claro */
+}
+
+/* Barra superior con degradado */
+ion-toolbar {
+  --background: linear-gradient(90deg, #2c3e50, #34495e);
+  --color: #ffffff;
+}
+
+/* Fondo de contenido */
+ion-content {
+  --background: #222831;
+}
+
+/* Tarjetas con sombra suave */
+ion-card {
+  --background: #2f3640;
+  --color: #ffffff;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  border-radius: 12px;
+}
+
+/* Botones con color de acento */
+ion-button {
+  --background: var(--ion-color-primary);
+  --color: var(--ion-color-primary-contrast);
+  border-radius: 8px;
+}
+
+/* Chips */
+ion-chip {
+  --background: #3a4750;
+  --color: #ffffff;
+}
+
+ion-card-title {
+  color: var(--ion-color-primary) !important;
+  font-weight: bold;
+  font-size: 1.1rem;
+}
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  height: 34px;
+  padding: 0 12px;
+  border-radius: 16px;
+  font-weight: 500;
+}
+
+
+

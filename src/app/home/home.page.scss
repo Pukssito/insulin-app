@@ -1,0 +1,9 @@
+.date { font-weight: 600; }
+.row { display: flex; gap: .5rem; align-items: center; flex-wrap: wrap; }
+.row.bolos { margin-top: .25rem; margin-bottom: .25rem; }
+.row.end { justify-content: flex-end; }
+ion-card { border-radius: 16px; }
+ion-chip { --padding-start: 8px; --padding-end: 8px; }
+
+
+

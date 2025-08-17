@@ -1,0 +1,29 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-title>Configura tu insulina</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <ion-segment [(ngModel)]="tab">
+    <ion-segment-button value="pen">Plumas</ion-segment-button>
+    <ion-segment-button value="vial">Viales</ion-segment-button>
+  </ion-segment>
+
+  <ion-searchbar [(ngModel)]="q" placeholder="Buscar marca (p.ej. Tresiba, Fiasp)"></ion-searchbar>
+
+  <ion-list>
+    <ion-item *ngFor="let b of listForTab()" (click)="toggle(b.id)" detail="false">
+      <ion-label>
+        <div>{{ b.tradeName }}</div>
+        <small>Clase: {{ b.class }} · Velocidad: {{ b.speed }}</small>
+        <small *ngIf="b.notes" style="opacity:.7">({{ b.notes }})</small>
+      </ion-label>
+      <ion-checkbox slot="end" [checked]="selected.has(b.id)"></ion-checkbox>
+    </ion-item>
+  </ion-list>
+
+  <ion-button expand="block" [disabled]="selected.size===0" (click)="save()">
+    Guardar y continuar
+  </ion-button>
+</ion-content>
