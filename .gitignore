@@ -1,25 +1,35 @@
-# Node / Angular / Ionic
+# ── Node/Angular/Ionic
 node_modules/
 dist/
 www/
+.angular/
+.angular/cache/
+coverage/
 
-# Capacitor / Android
-android/app/build/
-android/build/
+# ── Capacitor / Android
 android/.gradle/
 android/.idea/
 android/local.properties
+android/app/build/
+android/build/
+*.apk
+*.aab
+
+
+# ── Keystore / claves (¡importantísimo no subir!)
 *.keystore
 *.jks
+*.pem
+*.p12
 
-# iOS (si lo añades)
+# ── iOS (por si lo añades en el futuro)
 ios/build/
 ios/Pods/
 ios/*.xcworkspace
 ios/*.xcodeproj/project.xcworkspace/
 ios/*.xcodeproj/xcuserdata/
 
-# OS/editor
+# ── Editores / SO
+.vscode/
 .DS_Store
 Thumbs.db
-.vscode/
