@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
-import { DoseEntry, SlotConfig } from '../models/models';
+import { DoseEntry, GlucoseEntry, SlotConfig } from '../models/models';
 import { toYmdLocal, minutesNowLocal } from '../utils/date-utils';
 import { LocalNotifications } from '@capacitor/local-notifications';
 import { Preferences } from '@capacitor/preferences';
@@ -12,6 +12,7 @@ import { InsulinBrand } from '../models/insulin';
 import { buildSlotsFromBrands } from '../utils/slot-rules';
 
 const ENTRIES_KEY = 'insulin_entries_v1';
+const GLUCOSE_KEY = 'glucose_entries_v1';
 const PROFILE_KEY = 'insulin_profile_v1';
 
 @Injectable({ providedIn: 'root' })
@@ -23,6 +24,7 @@ export class InsulinService {
   ]);
 
   private entries: DoseEntry[] = [];
+  private glucoseEntries: GlucoseEntry[] = [];
   private profile: InsulinProfile | null = null;     // ⬅️ perfil
 
   readonly today$ = new BehaviorSubject<string>(toYmdLocal());
@@ -57,13 +59,17 @@ export class InsulinService {
    *  STORAGE
    * ======================= */
   private async loadFromStorage() {
-    const [{ value: entriesJson }, { value: profileJson }] = await Promise.all([
+    const [{ value: entriesJson }, { value: glucoseJson }, { value: profileJson }] = await Promise.all([
       Preferences.get({ key: ENTRIES_KEY }),
+      Preferences.get({ key: GLUCOSE_KEY }),
       Preferences.get({ key: PROFILE_KEY }),
     ]);
 
     if (entriesJson) {
       try { this.entries = JSON.parse(entriesJson); } catch { this.entries = []; }
+    }
+    if (glucoseJson) {
+      try { this.glucoseEntries = JSON.parse(glucoseJson); } catch { this.glucoseEntries = []; }
     }
     if (profileJson) {
       try { this.profile = JSON.parse(profileJson); this.applyProfileToSlots(); } catch {}
@@ -72,7 +78,10 @@ export class InsulinService {
   }
 
   private async saveToStorage() {
-    await Preferences.set({ key: ENTRIES_KEY, value: JSON.stringify(this.entries) });
+    await Promise.all([
+      Preferences.set({ key: ENTRIES_KEY, value: JSON.stringify(this.entries) }),
+      Preferences.set({ key: GLUCOSE_KEY, value: JSON.stringify(this.glucoseEntries) }),
+    ]);
   }
 
   /* =======================
@@ -81,9 +90,7 @@ export class InsulinService {
   private tick() {
     const nowYmd = toYmdLocal();
     if (nowYmd !== this.today$.value) {
-      this.entries = [];
       this.today$.next(nowYmd);
-      this.saveToStorage();
     }
     this.recomputeMissed();
   }
@@ -185,9 +192,34 @@ export class InsulinService {
     this.recomputeMissed();
   }
 
+  getGlucose(dateYmd: string, slotId: string): number | null {
+    const entry = this.glucoseEntries.find(g => g.dateYmd === dateYmd && g.slotId === slotId);
+    return entry ? entry.value : null;
+  }
+
+  setGlucose(slotId: string, value: number) {
+    const dateYmd = toYmdLocal();
+    const idx = this.glucoseEntries.findIndex(g => g.dateYmd === dateYmd && g.slotId === slotId);
+    
+    if (value <= 0) {
+      if (idx >= 0) this.glucoseEntries.splice(idx, 1);
+    } else {
+      if (idx >= 0) {
+        this.glucoseEntries[idx].value = value;
+        this.glucoseEntries[idx].timeIso = new Date().toISOString();
+      } else {
+        this.glucoseEntries.push({ dateYmd, timeIso: new Date().toISOString(), slotId, value });
+      }
+    }
+
+    this.today$.next(dateYmd);
+    this.saveToStorage();
+  }
+
   resetSlotToday(slotId: string) {
     const today = toYmdLocal();
     this.entries = this.entries.filter(e => !(e.dateYmd === today && e.slotId === slotId));
+    this.glucoseEntries = this.glucoseEntries.filter(g => !(g.dateYmd === today && g.slotId === slotId));
 
     this.today$.next(today);
     this.saveToStorage();
@@ -197,6 +229,7 @@ export class InsulinService {
   resetAllToday() {
     const today = toYmdLocal();
     this.entries = this.entries.filter(e => e.dateYmd !== today);
+    this.glucoseEntries = this.glucoseEntries.filter(g => g.dateYmd !== today);
 
     this.today$.next(today);
     this.saveToStorage();
@@ -212,5 +245,25 @@ export class InsulinService {
       .pop();
     if (idx !== undefined) this.entries.splice(idx, 1);
     this.today$.next(dateYmd);
+    this.saveToStorage();
+  }
+
+  /* =======================
+   *  HISTORIAL
+   * ======================= */
+  getHistoryDays(): string[] {
+    const dates = new Set([
+      ...this.entries.map(e => e.dateYmd),
+      ...this.glucoseEntries.map(g => g.dateYmd)
+    ]);
+    return Array.from(dates).sort((a, b) => b.localeCompare(a)); // Más recientes primero
+  }
+
+  getEntriesForDate(dateYmd: string): DoseEntry[] {
+    return this.entries.filter(e => e.dateYmd === dateYmd);
+  }
+
+  getGlucoseForDate(dateYmd: string): GlucoseEntry[] {
+    return this.glucoseEntries.filter(g => g.dateYmd === dateYmd);
   }
 }

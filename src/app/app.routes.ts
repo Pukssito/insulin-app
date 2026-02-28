@@ -1,4 +1,5 @@
 import { Routes } from '@angular/router';
+import { HistoryPage } from './history/history.page';
 
 export const routes: Routes = [
   {
@@ -9,5 +10,9 @@ export const routes: Routes = [
     path: 'home',
     loadComponent: () => import('./home/home.page').then(m => m.HomePage)
   },
-  { path: '', redirectTo: 'home', pathMatch: 'full' } // <- 'full' en minúsculas
+  {
+    path: 'history',
+    component: HistoryPage
+  },
+  { path: '', redirectTo: 'home', pathMatch: 'full' }
 ];

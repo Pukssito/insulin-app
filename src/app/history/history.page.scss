@@ -1,0 +1,106 @@
+.history-header {
+  padding: 1.5rem 0.5rem 1rem;
+  h1 { font-size: 2.2rem; font-weight: 800; margin: 0; color: #fff; }
+  p { font-size: 1rem; margin: 0.5rem 0; opacity: 0.6; }
+}
+
+.calendar-container {
+  background: #2f3640;
+  border-radius: 20px;
+  overflow: hidden;
+  margin-bottom: 1.5rem;
+  border: 1px solid rgba(255,255,255,0.05);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+}
+
+.custom-calendar {
+  --background: #2f3640;
+  --color: #fff;
+  width: 100%;
+  border-radius: 20px;
+}
+
+.selection-prompt {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 2rem;
+  opacity: 0.3;
+  ion-icon { font-size: 3rem; margin-bottom: 0.5rem; }
+  p { font-size: 1.1rem; font-weight: 600; }
+}
+
+.day-detail-card {
+  background: #2f3640;
+  border-radius: 20px;
+  overflow: hidden;
+  animation: slideUp 0.3s ease-out;
+  border: 1px solid rgba(255,255,255,0.05);
+  margin-bottom: 2rem;
+
+  .detail-header {
+    background: rgba(0,0,0,0.2);
+    padding: 1.2rem 1rem;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    
+    h2 { font-size: 1.4rem; font-weight: 800; margin: 0 0 0.75rem; color: #fff; text-transform: capitalize; }
+    
+    .summary-pills {
+      display: flex;
+      gap: 8px;
+      ion-chip {
+        margin: 0;
+        height: 32px;
+        font-weight: 700;
+        font-size: 0.8rem;
+        ion-icon { font-size: 1rem; }
+      }
+    }
+  }
+}
+
+.section-title {
+  font-size: 0.75rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: var(--ion-color-primary);
+  letter-spacing: 1.2px;
+  margin: 1.5rem 0 0.75rem;
+  &:first-child { margin-top: 0.5rem; }
+}
+
+.detail-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.detail-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: rgba(255,255,255,0.03);
+  border-radius: 12px;
+  font-size: 0.95rem;
+
+  .time { font-weight: 800; color: #777; width: 50px; }
+  .value { flex: 1; font-weight: 700; color: #fff; }
+  .slot { font-size: 0.7rem; opacity: 0.4; text-transform: uppercase; font-weight: 800; letter-spacing: 0.5px; }
+
+  &.glucose { border-left: 4px solid #ff7675; }
+  &.dose { border-left: 4px solid var(--ion-color-primary); }
+}
+
+.no-data-msg {
+  padding: 1rem;
+  text-align: center;
+  opacity: 0.4;
+  font-style: italic;
+  font-size: 0.9rem;
+}
+
+@keyframes slideUp {
+  from { transform: translateY(20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}

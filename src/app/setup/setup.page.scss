@@ -1,0 +1,139 @@
+.setup-header {
+  padding: 1.5rem 0.5rem;
+  h1 { font-size: 2.2rem; font-weight: 800; margin: 0; color: #fff; }
+  p { font-size: 1rem; margin: 0.5rem 0 0; opacity: 0.6; }
+}
+
+.custom-segment {
+  margin-bottom: 2rem;
+  --background: #2f3640;
+  border-radius: 16px;
+  padding: 4px; 
+  min-height: 58px; 
+
+  ion-segment-button {
+    --color: #999;
+    --color-checked: #fff;
+    --indicator-color: var(--ion-color-primary);
+    --border-radius: 12px;
+    margin: 2px;
+    
+    ion-label {
+      margin: 2px 0 4px 0 !important;
+      font-weight: 500;
+      font-size: 0.75rem;
+      letter-spacing: 0.2px;
+    }
+
+    ion-icon {
+      margin: 4px 0 0 0 !important;
+      font-size: 1.3rem;
+    }
+  }
+}
+
+.custom-searchbar {
+  --background: #2f3640;
+  --border-radius: 12px;
+  --placeholder-color: #666;
+  padding: 0;
+  margin-bottom: 2rem;
+}
+
+.insulin-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  margin-bottom: 6rem;
+}
+
+.insulin-card {
+  position: relative;
+  background: #2f3640;
+  border-radius: 16px;
+  padding: 16px;
+  border: 2px solid transparent;
+  transition: transform 0.2s ease, border-color 0.2s ease;
+  overflow: hidden;
+
+  &.is-selected {
+    border-color: var(--ion-color-primary);
+    transform: translateY(-4px);
+    background: rgba(var(--ion-color-primary-rgb), 0.1);
+  }
+
+  /* Colores por clase de insulina */
+  &.prandial ion-badge { --background: #ff9f43; --color: #fff; }
+  &.basal ion-badge { --background: #54a0ff; --color: #fff; }
+  &.mix ion-badge { --background: #a55eea; --color: #fff; }
+
+  .card-selection-indicator {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    ion-icon { font-size: 1.5rem; color: #666; }
+  }
+
+  &.is-selected .card-selection-indicator ion-icon {
+    color: var(--ion-color-primary);
+  }
+
+  .card-body {
+    .brand-name {
+      font-size: 1.2rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+      color: #fff;
+      line-height: 1.2;
+    }
+
+    .brand-info {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      align-items: flex-start;
+      margin-bottom: 8px;
+      
+      ion-badge { 
+        font-size: 0.65rem; 
+        text-transform: uppercase; 
+        padding: 4px 8px;
+        border-radius: 6px;
+      }
+      
+      span { 
+        font-size: 0.8rem; 
+        color: #999; 
+        text-transform: capitalize; 
+      }
+    }
+
+    .brand-notes {
+      font-size: 0.75rem;
+      opacity: 0.5;
+      font-style: italic;
+    }
+  }
+}
+
+.fixed-footer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 16px;
+  background: linear-gradient(to top, #222831 80%, transparent 100%);
+  z-index: 10;
+}
+
+.save-btn {
+  --border-radius: 16px;
+  --padding-top: 1.2rem;
+  --padding-bottom: 1.2rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.shadow-btn {
+  box-shadow: 0 8px 24px rgba(var(--ion-color-primary-rgb), 0.3);
+}

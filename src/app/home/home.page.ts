@@ -7,12 +7,12 @@ import { IonicModule, ToastController } from '@ionic/angular'; // ← ToastContr
 import { InsulinService } from '../../service/insulin.service';
 import { SlotConfig } from '../../models/models';
 import { formatRange } from '../../utils/date-utils';
-import { Router } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [IonicModule, CommonModule, FormsModule],
+  imports: [IonicModule, CommonModule, FormsModule, RouterModule],
   templateUrl: './home.page.html',
   styleUrls: ['./home.page.scss'],
 })
@@ -52,6 +52,14 @@ export class HomePage implements OnDestroy {
   ngOnDestroy() { this.sub.unsubscribe(); }
 
   range(s: SlotConfig) { return formatRange(s.startMin, s.endMin); }
+
+  getSlotIcon(id: string) {
+    if (id.includes('morning')) return 'sunny-outline';
+    if (id.includes('afternoon')) return 'partly-sunny-outline';
+    if (id.includes('night') || id.includes('evening')) return 'moon-outline';
+    return 'time-outline';
+  }
+
   basalDone(s: SlotConfig) { return this.svc.basalDone(this.today, s.id); }
   bolusSum(s: SlotConfig) { return this.svc.bolusSum(this.today, s.id); }
 
@@ -79,6 +87,10 @@ export class HomePage implements OnDestroy {
   addComment(_s: SlotConfig, _text: string) {}
   
   goSetup() {
-  this.router.navigateByUrl('/setup');
-}
+    this.router.navigateByUrl('/setup');
+  }
+
+  goHistory() {
+    this.router.navigateByUrl('/history');
+  }
 }

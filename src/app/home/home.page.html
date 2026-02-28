@@ -1,64 +1,115 @@
-<ion-header>
-  <ion-toolbar>
+<ion-header class="ion-no-border">
+  <ion-toolbar mode="ios">
     <ion-buttons slot="start">
-      <ion-back-button defaultHref="/setup" text="volver a configuracion"></ion-back-button>
+      <ion-back-button defaultHref="/setup" text="Configuración" icon="settings-outline"></ion-back-button>
     </ion-buttons>
-    <ion-title class="ion-text-center">
-      Insulina
-    </ion-title>
+    <ion-title>Insulina Diario</ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="resetAll()" color="danger" fill="clear">
+        <ion-icon slot="icon-only" name="trash-outline"></ion-icon>
+      </ion-button>
+    </ion-buttons>
   </ion-toolbar>
 </ion-header>
 
-
-
 <ion-content class="ion-padding">
-  <ion-card color="light">
-    <ion-card-content>
-      <div class="date">Hoy, {{ today | date: 'dd/MM/yyyy' }}</div>
-    </ion-card-content>
-  </ion-card>
+  <!-- Tarjeta de Fecha Hoy (con acceso al historial) -->
+  <div class="header-section" (click)="goHistory()">
+    <div class="header-flex">
+      <div>
+        <h2 class="day-title">Hoy</h2>
+        <p class="date-subtitle">{{ today | date: 'EEEE, d MMMM yyyy' }}</p>
+      </div>
+      <div class="history-pill">
+        <ion-icon name="calendar-clear-outline"></ion-icon>
+        <span>Historial</span>
+      </div>
+    </div>
+  </div>
 
-  <ng-container *ngFor="let s of slots">
-    <ion-card>
-      <ion-card-header>
-        <ion-card-title>{{ s.label }}</ion-card-title>
-        <ion-card-subtitle>{{ range(s) }}</ion-card-subtitle>
-        <ion-text color="warning" *ngIf="missed.includes(s.id)">
-          ⚠ Dosis olvidada
-        </ion-text>
-      </ion-card-header>
-
-
-      <ion-card-content>
-        <div *ngIf="s.kind === 'basal' || s.kind === 'both'" class="row">
-          <ion-badge class="status-badge" [color]="basalDone(s) ? 'success' : 'medium'">
-            {{ basalDone(s) ? 'Basal puesta' : 'Basal pendiente' }}
-          </ion-badge>
-          <ion-button size="small" fill="outline" (click)="toggleBasal(s)">
-            {{ basalDone(s) ? 'Desmarcar' : 'Marcar basal' }}
-          </ion-button>
-        </div>
-
-        <div *ngIf="s.kind === 'bolus' || s.kind === 'both'">
-          <div class="row bolos">
-            <ion-label>Bolos: {{ bolusSum(s) }} U</ion-label>
+  <!-- Franjas de Insulina -->
+  <div class="slots-container">
+    <ng-container *ngFor="let s of slots">
+      <ion-card [class]="'slot-card ' + s.id" [ngClass]="{'is-done': basalDone(s), 'is-missed': missed.includes(s.id)}">
+        <ion-card-header>
+          <div class="slot-header">
+            <div class="title-group">
+              <ion-icon [name]="getSlotIcon(s.id)" class="slot-icon"></ion-icon>
+              <div>
+                <h2 class="slot-title">{{ s.label }}</h2>
+                <p class="time-range">{{ range(s).replace('-', '➔') }}</p>
+              </div>
+            </div>
+            <div *ngIf="missed.includes(s.id)" class="missed-alert">
+              <ion-icon name="alert-circle"></ion-icon>
+              OLVIDADA
+            </div>
           </div>
-          <div class="row">
-            <ion-button size="small" fill="outline" *ngFor="let u of quicks" (click)="addBolus(s,u)">+{{u}}
-              U</ion-button>
-            <ion-input type="text" placeholder="Comentario"
-              (keyup.enter)="addComment(s, $any($event.target).value); $any($event.target).value=''"></ion-input>
+        </ion-card-header>
+
+        <ion-card-content>
+          <!-- Sección GLUCOSA -->
+          <div class="glucose-section">
+            <div class="glucose-header">
+              <ion-icon name="water-outline"></ion-icon>
+              <span>Nivel de azúcar</span>
+            </div>
+            <div class="glucose-input-wrapper">
+              <ion-input type="number" 
+                         [value]="svc.getGlucose(today, s.id)" 
+                         placeholder="---"
+                         (ionChange)="svc.setGlucose(s.id, $any($event.target).value)"
+                         class="glucose-input"></ion-input>
+              <span class="unit-suffix">mg/dL</span>
+            </div>
           </div>
-        </div>
 
-        <div class="row end">
-          <ion-button size="small" fill="clear" (click)="resetSlot(s)">Reset franja</ion-button>
-        </div>
-      </ion-card-content>
-    </ion-card>
-  </ng-container>
+          <!-- Sección BASAL -->
+          <div *ngIf="s.kind === 'basal' || s.kind === 'both'" class="status-row">
+            <div class="status-indicator" [class.done]="basalDone(s)">
+              <ion-icon [name]="basalDone(s) ? 'checkmark-circle' : 'ellipse'"></ion-icon>
+              <span>{{ basalDone(s) ? 'Dosis aplicada' : 'Aún pendiente' }}</span>
+            </div>
+            <ion-button [fill]="basalDone(s) ? 'clear' : 'solid'" 
+                        [color]="basalDone(s) ? 'medium' : 'primary'"
+                        (click)="toggleBasal(s)" class="main-action-btn">
+              {{ basalDone(s) ? 'Desmarcar' : 'Inyectar' }}
+            </ion-button>
+          </div>
 
-  <ion-button expand="block" (click)="resetAll()">Reset global de hoy</ion-button>
-  <ion-button expand="block" color="warning" (click)="simulate()">Simular Olvido</ion-button>
+          <!-- Sección BOLUS -->
+          <div *ngIf="s.kind === 'bolus' || s.kind === 'both'" class="bolus-container">
+            <div class="bolus-display">
+              <span class="unit-count">{{ bolusSum(s) }}</span>
+              <span class="unit-label">Unidades extra</span>
+            </div>
+            
+            <div class="unit-keyboard">
+              <ion-button fill="outline" *ngFor="let u of quicks" (click)="addBolus(s,u)" size="small">
+                +{{u}}
+              </ion-button>
+            </div>
 
+            <div class="note-input-wrapper">
+              <ion-icon name="create-outline"></ion-icon>
+              <ion-input type="text" placeholder="¿Algo que anotar? (ej: comida, ejercicio...)"
+                (keyup.enter)="addComment(s, $any($event.target).value); $any($event.target).value=''"></ion-input>
+            </div>
+          </div>
+
+          <div class="card-footer">
+            <ion-button size="small" fill="clear" color="medium" (click)="resetSlot(s)">
+              Reiniciar esta franja
+            </ion-button>
+          </div>
+        </ion-card-content>
+      </ion-card>
+    </ng-container>
+  </div>
+
+  <div class="bottom-actions ion-margin-top">
+    <ion-button expand="block" fill="outline" color="warning" (click)="simulate()">
+      Simular Olvido (Prueba)
+    </ion-button>
+  </div>
 </ion-content>

@@ -1,9 +1,241 @@
-.date { font-weight: 600; }
-.row { display: flex; gap: .5rem; align-items: center; flex-wrap: wrap; }
-.row.bolos { margin-top: .25rem; margin-bottom: .25rem; }
-.row.end { justify-content: flex-end; }
-ion-card { border-radius: 16px; }
-ion-chip { --padding-start: 8px; --padding-end: 8px; }
+.header-section {
+  padding: 1rem 0.5rem;
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+  
+  &:active { opacity: 0.6; }
 
+  .header-flex {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
 
+  .day-title { font-size: 2.2rem; font-weight: 800; margin: 0; color: #fff; }
+  .date-subtitle { font-size: 1rem; margin: 0; opacity: 0.5; text-transform: capitalize; }
 
+  .history-pill {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: linear-gradient(135deg, rgba(var(--ion-color-primary-rgb), 0.2) 0%, rgba(var(--ion-color-primary-rgb), 0.05) 100%);
+    color: var(--ion-color-primary);
+    padding: 10px 16px;
+    border-radius: 14px;
+    font-weight: 800;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border: 1px solid rgba(var(--ion-color-primary-rgb), 0.2);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    
+    ion-icon { 
+      font-size: 1.2rem; 
+      color: var(--ion-color-primary);
+    }
+  }
+}
+
+.slots-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+}
+
+.slot-card {
+  margin: 0;
+  border-radius: 20px;
+  background: #2f3640;
+  box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+  border: 1px solid rgba(255,255,255,0.05);
+
+  &.is-done {
+    border-left: 5px solid var(--ion-color-success);
+  }
+
+  &.is-missed {
+    border: 2px solid var(--ion-color-danger);
+    animation: shake 0.5s ease-in-out;
+  }
+}
+
+.slot-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  .title-group {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .slot-icon { font-size: 2.2rem; color: var(--ion-color-primary); }
+
+  .slot-title {
+    font-size: 1.3rem;
+    font-weight: 700;
+    margin: 0;
+    color: #fff;
+  }
+
+  .time-range {
+    font-size: 0.85rem;
+    margin: 2px 0 0;
+    opacity: 0.6;
+    letter-spacing: 0.5px;
+    font-weight: 500;
+  }
+
+  .missed-alert {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    background: var(--ion-color-danger);
+    color: #fff;
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 0.7rem;
+    font-weight: 800;
+  }
+}
+
+.glucose-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+
+  .glucose-header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: #ff7675; /* Rojo suave estilo médico */
+    margin-bottom: 0.5rem;
+    ion-icon { font-size: 1rem; }
+  }
+
+  .glucose-input-wrapper {
+    display: flex;
+    align-items: baseline;
+    gap: 4px;
+    
+    .glucose-input {
+      --padding-start: 0;
+      --padding-end: 0;
+      font-size: 2.2rem;
+      font-weight: 800;
+      color: #fff;
+      width: 80px;
+      text-align: center;
+    }
+
+    .unit-suffix {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: #555;
+    }
+  }
+}
+
+.status-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(0,0,0,0.15);
+  padding: 10px 14px;
+  border-radius: 12px;
+  margin-bottom: 1.5rem;
+
+  .status-indicator {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+    font-size: 0.95rem;
+    color: #999;
+
+    ion-icon { font-size: 1.2rem; }
+
+    &.done {
+      color: var(--ion-color-success);
+    }
+  }
+
+  .main-action-btn {
+    margin: 0;
+    --border-radius: 10px;
+    font-weight: 700;
+    font-size: 0.85rem;
+  }
+}
+
+.bolus-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0.5rem 0;
+
+  .bolus-display {
+    text-align: center;
+    margin-bottom: 1rem;
+    .unit-count {
+      display: block;
+      font-size: 3rem;
+      font-weight: 800;
+      color: #fff;
+      line-height: 1;
+    }
+    .unit-label {
+      font-size: 0.75rem;
+      color: #777;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      font-weight: 700;
+    }
+  }
+
+  .unit-keyboard {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 1.5rem;
+    
+    ion-button {
+      --border-radius: 12px;
+      width: 60px;
+      height: 45px;
+      font-weight: 800;
+      font-size: 1rem;
+      --border-width: 2px;
+    }
+  }
+
+  .note-input-wrapper {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: rgba(0,0,0,0.2);
+    padding: 0 12px;
+    border-radius: 12px;
+    ion-icon { font-size: 1.2rem; opacity: 0.4; }
+    ion-input { --padding-start: 0; font-size: 0.85rem; color: #bbb; }
+  }
+}
+
+.card-footer {
+  text-align: center;
+  margin-top: 0.5rem;
+  ion-button { --color: #555; font-size: 0.75rem; font-weight: 500; }
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-5px); }
+  75% { transform: translateX(5px); }
+}

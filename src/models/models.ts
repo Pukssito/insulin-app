@@ -16,3 +16,10 @@ export interface DoseEntry {
   units: number;
   note?: string;
 }
+
+export interface GlucoseEntry {
+  dateYmd: string;
+  timeIso: string;
+  slotId: string;
+  value: number; // mg/dL
+}

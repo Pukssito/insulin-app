@@ -1,29 +1,59 @@
-<ion-header>
-  <ion-toolbar>
-    <ion-title>Configura tu insulina</ion-title>
+<ion-header class="ion-no-border">
+  <ion-toolbar mode="ios">
+    <ion-title>Tu Insulina</ion-title>
   </ion-toolbar>
 </ion-header>
 
 <ion-content class="ion-padding">
-  <ion-segment [(ngModel)]="tab">
-    <ion-segment-button value="pen">Plumas</ion-segment-button>
-    <ion-segment-button value="vial">Viales</ion-segment-button>
+  <div class="setup-header">
+    <h1>Configuración</h1>
+    <p>Selecciona las marcas de insulina que utilizas habitualmente.</p>
+  </div>
+
+  <ion-segment [(ngModel)]="tab" mode="ios" class="custom-segment">
+    <ion-segment-button value="pen" layout="icon-top">
+      <ion-icon name="color-filter-outline"></ion-icon>
+      <ion-label>Plumas</ion-label>
+    </ion-segment-button>
+    <ion-segment-button value="vial" layout="icon-top">
+      <ion-icon name="flask-outline"></ion-icon>
+      <ion-label>Viales</ion-label>
+    </ion-segment-button>
   </ion-segment>
 
-  <ion-searchbar [(ngModel)]="q" placeholder="Buscar marca (p.ej. Tresiba, Fiasp)"></ion-searchbar>
+  <ion-searchbar [(ngModel)]="q" 
+                 placeholder="Buscar marca..." 
+                 mode="ios" 
+                 class="custom-searchbar"></ion-searchbar>
 
-  <ion-list>
-    <ion-item *ngFor="let b of listForTab()" (click)="toggle(b.id)" detail="false">
-      <ion-label>
-        <div>{{ b.tradeName }}</div>
-        <small>Clase: {{ b.class }} · Velocidad: {{ b.speed }}</small>
-        <small *ngIf="b.notes" style="opacity:.7">({{ b.notes }})</small>
-      </ion-label>
-      <ion-checkbox slot="end" [checked]="selected.has(b.id)"></ion-checkbox>
-    </ion-item>
-  </ion-list>
+  <div class="insulin-grid">
+    <div *ngFor="let b of listForTab()" 
+         [class]="'insulin-card ' + b.class" 
+         [ngClass]="{'is-selected': selected.has(b.id)}"
+         (click)="toggle(b.id)">
+      
+      <div class="card-selection-indicator">
+        <ion-icon [name]="selected.has(b.id) ? 'checkmark-circle' : 'add-circle-outline'"></ion-icon>
+      </div>
 
-  <ion-button expand="block" [disabled]="selected.size===0" (click)="save()">
-    Guardar y continuar
-  </ion-button>
+      <div class="card-body">
+        <div class="brand-name">{{ b.tradeName }}</div>
+        <div class="brand-info">
+          <ion-badge slot="start">{{ b.class }}</ion-badge>
+          <span>{{ b.speed }}</span>
+        </div>
+        <div class="brand-notes" *ngIf="b.notes">{{ b.notes }}</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="fixed-footer">
+    <ion-button expand="block" 
+                [disabled]="selected.size===0" 
+                (click)="save()"
+                class="save-btn shadow-btn">
+      Guardar y continuar
+      <ion-icon name="arrow-forward-outline" slot="end"></ion-icon>
+    </ion-button>
+  </div>
 </ion-content>
