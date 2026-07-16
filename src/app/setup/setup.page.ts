@@ -6,7 +6,8 @@ import { Router } from '@angular/router';
 
 
 import { InsulinBrand } from '../../models/insulin';
-import { InsulinService } from 'src/service/insulin.service';
+import { InsulinStore } from '../../service/insulin.store';
+import { Notifications } from '../../service/notifications.service';
 
 @Component({
   standalone: true,
@@ -21,8 +22,12 @@ export class SetupPage {
   all: InsulinBrand[] = [];
   selected = new Set<string>();
 
-  constructor(private svc: InsulinService, private router: Router) {
-    this.all = this.svc.getCatalog();
+  constructor(
+    private store: InsulinStore,
+    private notifications: Notifications,
+    private router: Router,
+  ) {
+    this.all = this.store.getCatalog();
   }
 
   listForTab() {
@@ -37,7 +42,10 @@ export class SetupPage {
   }
 
   async save() {
-    await this.svc.setProfileByIds(Array.from(this.selected));
+    await this.store.setProfileByIds(Array.from(this.selected));
+    // Buen momento para pedir permiso de notificaciones: el usuario
+    // acaba de hacer una acción significativa (configurar su insulina).
+    await this.notifications.requestPermission();
     this.router.navigateByUrl('/home');
   }
 }

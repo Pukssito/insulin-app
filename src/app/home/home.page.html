@@ -85,11 +85,11 @@
               <span class="section-glyph">💧</span>
               <span>Glucosa</span>
             </div>
-            <div class="glucose-input-wrapper" [ngClass]="glucoseClass(svc.getGlucose(today, s.id))">
+            <div class="glucose-input-wrapper" [ngClass]="glucoseClass(store.getGlucose(today, s.id))">
               <ion-input type="number" inputmode="decimal"
-                         [value]="svc.getGlucose(today, s.id)"
+                         [value]="store.getGlucose(today, s.id)"
                          placeholder="---"
-                         (ionChange)="svc.setGlucose(s.id, $any($event.target).value)"
+                         (ionChange)="store.setGlucose(s.id, $any($event.target).value)"
                          class="glucose-input"></ion-input>
               <span class="unit-suffix">mg/dL</span>
             </div>
@@ -151,8 +151,8 @@
                 (keyup.enter)="addComment(s, $any($event.target).value); $any($event.target).value=''"></ion-input>
             </div>
 
-            <div *ngIf="svc.getNotesFor(today, s.id).length > 0" class="notes-list">
-              <div *ngFor="let n of svc.getNotesFor(today, s.id)" class="note-item">
+            <div *ngIf="store.getNotesFor(today, s.id).length > 0" class="notes-list">
+              <div *ngFor="let n of store.getNotesFor(today, s.id)" class="note-item">
                 <span class="note-time">{{ n.timeIso | date: 'HH:mm' }}</span>
                 <span class="note-text">{{ n.text }}</span>
               </div>

@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { IonicModule } from '@ionic/angular';
 import { RouterModule } from '@angular/router';
-import { InsulinService } from '../../service/insulin.service';
+import { InsulinStore } from '../../service/insulin.store';
 import { SlotConfig } from '../../models/models';
 
 @Component({
@@ -18,17 +18,17 @@ export class HistoryPage {
   selectedDate: string | null = null;
   highlightedDates: any[] = [];
 
-  constructor(public svc: InsulinService) {
+  constructor(public store: InsulinStore) {
     this.refreshDays();
     if (this.days.length > 0) {
       this.selectedDate = this.days[0];
     }
   }
 
-  get slots(): SlotConfig[] { return this.svc.slots(); }
+  get slots(): SlotConfig[] { return this.store.slots(); }
 
   private refreshDays() {
-    this.days = this.svc.getHistoryDays();
+    this.days = this.store.getHistoryDays();
     this.highlightedDates = this.days.map(date => ({
       date,
       textColor: '#ffffff',
@@ -46,8 +46,8 @@ export class HistoryPage {
   }
 
   getDaySummary(dateYmd: string) {
-    const doses = this.svc.getEntriesForDate(dateYmd);
-    const glucose = this.svc.getGlucoseForDate(dateYmd);
+    const doses = this.store.getEntriesForDate(dateYmd);
+    const glucose = this.store.getGlucoseForDate(dateYmd);
 
     const basalCount = doses.filter(d => d.type === 'basal').length;
     const bolusSum = doses.filter(d => d.type === 'bolus').reduce((acc, d) => acc + d.units, 0);
@@ -61,14 +61,14 @@ export class HistoryPage {
   }
 
   getEntries(dateYmd: string) {
-    return this.svc.getEntriesForDate(dateYmd);
+    return this.store.getEntriesForDate(dateYmd);
   }
 
   getGlucose(dateYmd: string) {
-    return this.svc.getGlucoseForDate(dateYmd);
+    return this.store.getGlucoseForDate(dateYmd);
   }
 
   getNotes(dateYmd: string) {
-    return this.svc.getNotesForDate(dateYmd);
+    return this.store.getNotesForDate(dateYmd);
   }
 }

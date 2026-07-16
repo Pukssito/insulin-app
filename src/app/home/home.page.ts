@@ -3,7 +3,8 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AlertController, IonicModule, ToastController } from '@ionic/angular';
 
-import { InsulinService } from '../../service/insulin.service';
+import { InsulinStore } from '../../service/insulin.store';
+import { DaySummary } from '../../service/day-summary';
 import { SlotConfig } from '../../models/models';
 import { formatRange, formatRelativeTime } from '../../utils/date-utils';
 import { Router, RouterModule } from '@angular/router';
@@ -20,21 +21,22 @@ export class HomePage {
   private prevMissed = new Set<string>();
 
   constructor(
-    public svc: InsulinService,
+    public store: InsulinStore,
+    public summary: DaySummary,
     private toast: ToastController,
     private alert: AlertController,
     private router: Router
   ) {
-    if (!this.svc.hasProfile()) {
+    if (!this.store.hasProfile()) {
       setTimeout(() => this.router.navigateByUrl('/setup'), 0);
     }
 
-    // Toast when a new basal is missed
+    // Toast cuando aparece una nueva basal olvidada
     effect(() => {
-      const ids = this.svc.missedBasalSlots();
+      const ids = this.summary.missedBasalSlots();
       for (const id of ids) {
         if (!this.prevMissed.has(id)) {
-          const label = this.svc.slots().find(s => s.id === id)?.label || id;
+          const label = this.store.slots().find(s => s.id === id)?.label || id;
           this.presentToast(`⚠ Dosis basal olvidada en ${label}`);
         }
       }
@@ -42,11 +44,11 @@ export class HomePage {
     });
   }
 
-  // Signal-bound getters (keep template API stable)
-  get slots() { return this.svc.slots(); }
-  get today() { return this.svc.today(); }
-  get daySummary() { return this.svc.daySummary(); }
-  get missed() { return this.svc.missedBasalSlots(); }
+  // Signal-bound getters (mantienen la API del template)
+  get slots() { return this.store.slots(); }
+  get today() { return this.store.today(); }
+  get daySummary() { return this.summary.daySummary(); }
+  get missed() { return this.summary.missedBasalSlots(); }
 
   range(s: SlotConfig) { return formatRange(s.startMin, s.endMin); }
 
@@ -61,16 +63,16 @@ export class HomePage {
     return this.slots.find(s => s.id === id)?.label ?? id;
   }
 
-  basalDone(s: SlotConfig) { return this.svc.basalDone(this.today, s.id); }
-  bolusSum(s: SlotConfig) { return this.svc.bolusSum(this.today, s.id); }
+  basalDone(s: SlotConfig) { return this.store.basalDone(this.today, s.id); }
+  bolusSum(s: SlotConfig) { return this.store.bolusSum(this.today, s.id); }
 
-  toggleBasal(s: SlotConfig) { this.svc.toggleBasal(s.id); }
-  addBolus(s: SlotConfig, u: number) { this.svc.addBolus(s.id, u); }
-  removeLastBolus(s: SlotConfig) { this.svc.removeLastBolus(s.id); }
+  toggleBasal(s: SlotConfig) { this.store.toggleBasal(s.id); }
+  addBolus(s: SlotConfig, u: number) { this.store.addBolus(s.id, u); }
+  removeLastBolus(s: SlotConfig) { this.store.removeLastBolus(s.id); }
 
   addComment(s: SlotConfig, text: string) {
     if (!text?.trim()) return;
-    this.svc.addNote(s.id, text);
+    this.store.addNote(s.id, text);
   }
 
   async confirmResetSlot(s: SlotConfig) {
@@ -79,7 +81,7 @@ export class HomePage {
       message: `Vas a borrar basal, bolus, glucosa y notas de ${s.label} de hoy. ¿Continuar?`,
       buttons: [
         { text: 'Cancelar', role: 'cancel' },
-        { text: 'Borrar', role: 'destructive', handler: () => this.svc.resetSlotToday(s.id) }
+        { text: 'Borrar', role: 'destructive', handler: () => this.store.resetSlotToday(s.id) }
       ]
     });
     await a.present();
@@ -91,7 +93,7 @@ export class HomePage {
       message: 'Vas a borrar todos los registros de hoy (basal, bolus, glucosa y notas). ¿Continuar?',
       buttons: [
         { text: 'Cancelar', role: 'cancel' },
-        { text: 'Borrar todo', role: 'destructive', handler: () => this.svc.resetAllToday() }
+        { text: 'Borrar todo', role: 'destructive', handler: () => this.store.resetAllToday() }
       ]
     });
     await a.present();
@@ -121,11 +123,11 @@ export class HomePage {
   }
 
   lastBasalTime(s: SlotConfig): string | null {
-    return this.svc.getLastEntryTime(this.today, s.id, 'basal');
+    return this.store.getLastEntryTime(this.today, s.id, 'basal');
   }
 
   lastBolusTime(s: SlotConfig): string | null {
-    return this.svc.getLastEntryTime(this.today, s.id, 'bolus');
+    return this.store.getLastEntryTime(this.today, s.id, 'bolus');
   }
 
   relTime(iso: string | null): string {
