@@ -1,7 +1,7 @@
 import { Component, inject, input, output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { IonicModule } from '@ionic/angular';
+import { IonicModule, PopoverController } from '@ionic/angular';
 
 import { InsulinStore } from '../../../service/insulin.store';
 import { SlotConfig } from '../../../models/models';
@@ -14,6 +14,7 @@ import {
   bolusOverflowFor,
   trimNoteText,
 } from './slot-card.helpers';
+import { TimePickerPopoverComponent } from '../time-picker-popover/time-picker-popover.component';
 
 /**
  * Tarjeta de una franja de insulina (mañana, tarde, noche, etc.).
@@ -37,6 +38,7 @@ import {
 })
 export class SlotCardComponent {
   private store = inject(InsulinStore);
+  private popoverCtrl = inject(PopoverController);
 
   slot = input.required<SlotConfig>();
   today = input.required<string>();
@@ -74,6 +76,30 @@ export class SlotCardComponent {
 
   get lastBolusTime(): string | null {
     return this.store.getLastEntryTime(this.today(), this.slot().id, 'bolus');
+  }
+
+  /**
+   * Hora de la última lectura de glucosa del slot (o null si no hay).
+   * Usado por la template para mostrar "120 mg/dL · hace X min" con su ✎.
+   */
+  get glucoseTime(): string | null {
+    if (this.glucose === null) return null;
+    const today = this.today();
+    const entry = this.store.glucoseEntries().find(
+      g => g.dateYmd === today && g.slotId === this.slot().id
+    );
+    return entry?.timeIso ?? null;
+  }
+
+  /**
+   * Lista de boluses del slot, ordenados por hora ascendente.
+   * Cada entry tiene su ✎ en la template para editar su hora individualmente.
+   */
+  get bolusEntries() {
+    const today = this.today();
+    return this.store.entries()
+      .filter(e => e.dateYmd === today && e.slotId === this.slot().id && e.type === 'bolus')
+      .sort((a, b) => a.timeIso.localeCompare(b.timeIso));
   }
 
   // ===== Wrappers de helpers puros =====
@@ -126,5 +152,86 @@ export class SlotCardComponent {
     this.addNote.emit(trimmed);
     // Limpiamos el input después de emitir
     if (target && 'value' in target) target.value = '';
+  }
+
+  /**
+   * Abre un popover para editar la hora de la basal registrada.
+   * Al confirmar, llama al store con la nueva hora.
+   */
+  async onEditBasalTime() {
+    if (!this.basalDone) return;
+    const popover = await this.popoverCtrl.create({
+      component: TimePickerPopoverComponent,
+      componentProps: {
+        title: 'Cambiar hora de la basal',
+        defaultTime: this.lastBasalTime || new Date().toISOString(),
+      },
+    });
+    await popover.present();
+    const { data } = await popover.onDidDismiss();
+    if (data?.timeIso) {
+      this.store.updateBasalTime(this.slot().id, data.timeIso);
+    }
+  }
+
+  /**
+   * Abre un popover para editar la hora de un bolus concreto,
+   * identificado por su `oldTimeIso` actual.
+   */
+  async onEditSpecificBolusTime(oldTimeIso: string) {
+    const popover = await this.popoverCtrl.create({
+      component: TimePickerPopoverComponent,
+      componentProps: {
+        title: 'Cambiar hora del bolus',
+        defaultTime: oldTimeIso,
+      },
+    });
+    await popover.present();
+    const { data } = await popover.onDidDismiss();
+    if (data?.timeIso) {
+      this.store.updateBolusTimeByTimestamp(
+        this.slot().id,
+        oldTimeIso,
+        data.timeIso
+      );
+    }
+  }
+
+  /**
+   * Abre un popover para editar la hora de la lectura de glucosa del slot.
+   */
+  async onEditGlucoseTime() {
+    if (this.glucose === null) return;
+    const popover = await this.popoverCtrl.create({
+      component: TimePickerPopoverComponent,
+      componentProps: {
+        title: 'Cambiar hora de la glucosa',
+        defaultTime: this.glucoseTime || new Date().toISOString(),
+      },
+    });
+    await popover.present();
+    const { data } = await popover.onDidDismiss();
+    if (data?.timeIso) {
+      this.store.updateGlucoseTime(this.slot().id, data.timeIso);
+    }
+  }
+
+  /**
+   * Abre un popover para editar la hora de una nota concreta,
+   * identificada por su `oldTimeIso` actual.
+   */
+  async onEditNoteTime(oldTimeIso: string) {
+    const popover = await this.popoverCtrl.create({
+      component: TimePickerPopoverComponent,
+      componentProps: {
+        title: 'Cambiar hora de la nota',
+        defaultTime: oldTimeIso,
+      },
+    });
+    await popover.present();
+    const { data } = await popover.onDidDismiss();
+    if (data?.timeIso) {
+      this.store.updateLastNoteTime(this.slot().id, data.timeIso);
+    }
   }
 }

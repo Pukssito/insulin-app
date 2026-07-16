@@ -24,6 +24,10 @@
       <div class="section-header">
         <span class="section-glyph">💧</span>
         <span>Glucosa</span>
+        <span class="section-meta" *ngIf="glucose !== null">
+          {{ glucose }} mg/dL · {{ relTime(glucoseTime) }}
+          <button class="edit-time-btn" (click)="onEditGlucoseTime()" aria-label="Editar hora de la glucosa" title="Editar hora">✎</button>
+        </span>
       </div>
       <div class="glucose-input-wrapper" [ngClass]="glucoseClass(glucose)">
         <ion-input type="number" inputmode="decimal"
@@ -40,7 +44,10 @@
       <div class="section-header">
         <span class="section-glyph">💉</span>
         <span>Basal</span>
-        <span class="section-meta" *ngIf="basalDone">{{ relTime(lastBasalTime) }}</span>
+        <span class="section-meta" *ngIf="basalDone">
+          {{ relTime(lastBasalTime) }}
+          <button class="edit-time-btn" (click)="onEditBasalTime()" aria-label="Editar hora de la basal" title="Editar hora">✎</button>
+        </span>
       </div>
       <div class="status-row">
         <div class="status-indicator" [class.done]="basalDone">
@@ -60,7 +67,9 @@
       <div class="section-header">
         <span class="section-glyph">🔥</span>
         <span>Bolus</span>
-        <span class="section-meta" *ngIf="bolusSum > 0">{{ bolusSum }}U · {{ relTime(lastBolusTime) }}</span>
+        <span class="section-meta" *ngIf="bolusSum > 0">
+          {{ bolusSum }}U · {{ relTime(lastBolusTime) }}
+        </span>
       </div>
 
       <div class="bolus-visual" *ngIf="bolusSum > 0">
@@ -69,6 +78,18 @@
       </div>
       <div class="bolus-empty" *ngIf="bolusSum === 0">
         <span>Sin bolus</span>
+      </div>
+
+      <!-- Lista de bolus con su hora individual + ✎ para editar la hora de cada uno -->
+      <div *ngIf="bolusEntries.length > 0" class="bolus-list">
+        <div *ngFor="let entry of bolusEntries" class="bolus-list-item">
+          <span class="bolus-list-time">{{ entry.timeIso | date: 'HH:mm' }}</span>
+          <span class="bolus-list-units">{{ entry.units }}U</span>
+          <button class="edit-time-btn"
+                  (click)="onEditSpecificBolusTime(entry.timeIso)"
+                  aria-label="Editar hora de este bolus"
+                  title="Editar hora">✎</button>
+        </div>
       </div>
 
       <div class="unit-keyboard">
@@ -92,10 +113,15 @@
           (keyup.enter)="onAddNoteFromInput($any($event.target).value, noteInput)"></ion-input>
       </div>
 
+      <!-- Lista de notas con su hora + ✎ individual -->
       <div *ngIf="notes.length > 0" class="notes-list">
         <div *ngFor="let n of notes" class="note-item">
           <span class="note-time">{{ n.timeIso | date: 'HH:mm' }}</span>
           <span class="note-text">{{ n.text }}</span>
+          <button class="edit-time-btn"
+                  (click)="onEditNoteTime(n.timeIso)"
+                  aria-label="Editar hora de esta nota"
+                  title="Editar hora">✎</button>
         </div>
       </div>
     </div>

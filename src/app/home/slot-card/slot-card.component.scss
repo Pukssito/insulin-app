@@ -133,6 +133,67 @@ ion-card-content {
   }
 }
 
+/* Botón para editar la hora de una entry (basal, bolus, glucosa, nota).
+   Solo aparece cuando hay algo que editar. */
+.edit-time-btn {
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 0.8rem;
+  margin-left: 6px;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 4px;
+  line-height: 1;
+  transition: color 0.2s ease, background 0.2s ease;
+}
+.edit-time-btn:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.08);
+}
+.edit-time-btn:active {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+/* Lista de bolus con hora individual. Misma estética que .note-item. */
+.bolus-list {
+  margin-top: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  width: 100%;
+}
+
+.bolus-list-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.8rem;
+  padding: 4px 10px;
+  background: rgba(255, 152, 0, 0.08);
+  border-left: 2px solid #ff9800;
+  border-radius: 4px;
+  text-align: left;
+}
+
+.bolus-list-time {
+  color: #ffb74d;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
+}
+
+.bolus-list-units {
+  color: #ccc;
+  flex: 1;
+}
+
+/* Ajuste: el .edit-time-btn dentro de la lista de bolus no necesita
+   margin-left porque ya hay gap en el flex del item. */
+.bolus-list-item .edit-time-btn {
+  margin-left: 0;
+}
+
 .section-glucose {
   border-top: 3px solid rgba(255, 82, 82, 0.65);
   padding-top: 12px;

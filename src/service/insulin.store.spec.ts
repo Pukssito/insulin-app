@@ -264,4 +264,198 @@ describe('InsulinStore', () => {
     // Comportamiento correcto: la última lectura (200)
     expect(store.getGlucose(today, 'morning')).toBe(200);
   });
+
+  /* ============================================================
+   *  11. timeIso opcional — permite registrar dosis pasadas
+   * ============================================================ */
+  it('addBolus: acepta un timeIso personalizado para registrar dosis pasadas', () => {
+    const today = toYmdLocal();
+    const pastTime = '2026-07-16T08:30:00.000Z';
+
+    store.addBolus('morning', 2, pastTime);
+
+    const entries = store.getEntriesFor(today, 'morning');
+    expect(entries.length).toBe(1);
+    expect(entries[0].type).toBe('bolus');
+    expect(entries[0].units).toBe(2);
+    expect(entries[0].timeIso).toBe(pastTime);
+  });
+
+  it('toggleBasal: acepta un timeIso personalizado para registrar la basal a una hora distinta', () => {
+    const today = toYmdLocal();
+    const pastTime = '2026-07-16T07:15:00.000Z';
+
+    store.toggleBasal('morning', pastTime);
+
+    expect(store.basalDone(today, 'morning')).toBe(true);
+    const last = store.getLastEntryTime(today, 'morning', 'basal');
+    expect(last).toBe(pastTime);
+  });
+
+  it('addBolus: si no se pasa timeIso, usa la hora actual (comportamiento por defecto)', () => {
+    const today = toYmdLocal();
+    const before = Date.now();
+
+    store.addBolus('morning', 1);
+
+    const after = Date.now();
+    const entries = store.getEntriesFor(today, 'morning');
+    expect(entries.length).toBe(1);
+    const stored = new Date(entries[0].timeIso).getTime();
+    // El timestamp guardado está entre before y after (con un margen por ms)
+    expect(stored).toBeGreaterThanOrEqual(before - 10);
+    expect(stored).toBeLessThanOrEqual(after + 10);
+  });
+
+  /* ============================================================
+   *  12. updateBasalTime / updateLastBolusTime — edición
+   * ============================================================ */
+  it('updateBasalTime: cambia el timeIso de la basal del slot', () => {
+    const today = toYmdLocal();
+    store.toggleBasal('morning');
+
+    const oldTime = store.getLastEntryTime(today, 'morning', 'basal');
+    expect(oldTime).not.toBeNull();
+
+    const newTime = '2026-07-16T07:30:00.000Z';
+    store.updateBasalTime('morning', newTime);
+
+    expect(store.getLastEntryTime(today, 'morning', 'basal')).toBe(newTime);
+    // basalDone sigue siendo true (solo cambió la hora, no el estado)
+    expect(store.basalDone(today, 'morning')).toBe(true);
+  });
+
+  it('updateBasalTime: no hace nada si no hay basal registrada', () => {
+    const today = toYmdLocal();
+    expect(store.basalDone(today, 'morning')).toBe(false);
+
+    // No debe lanzar ni crear entries fantasma
+    store.updateBasalTime('morning', '2026-07-16T07:30:00.000Z');
+
+    expect(store.basalDone(today, 'morning')).toBe(false);
+    expect(store.getEntriesFor(today, 'morning')).toEqual([]);
+  });
+
+  it('updateLastBolusTime: cambia el timeIso del ÚLTIMO bolus del slot', () => {
+    const today = toYmdLocal();
+    store.addBolus('morning', 1, '2026-07-16T08:00:00.000Z');
+    store.addBolus('morning', 2, '2026-07-16T09:00:00.000Z');
+    expect(store.bolusSum(today, 'morning')).toBe(3);
+
+    const newTime = '2026-07-16T09:30:00.000Z';
+    store.updateLastBolusTime('morning', newTime);
+
+    // El más reciente ahora tiene la nueva hora
+    expect(store.getLastEntryTime(today, 'morning', 'bolus')).toBe(newTime);
+    // El total NO cambia (solo cambiamos la hora, no las unidades)
+    expect(store.bolusSum(today, 'morning')).toBe(3);
+  });
+
+  it('updateLastBolusTime: no afecta a bolus anteriores del mismo slot', () => {
+    const today = toYmdLocal();
+    store.addBolus('morning', 1, '2026-07-16T08:00:00.000Z');
+    store.addBolus('morning', 2, '2026-07-16T09:00:00.000Z');
+
+    store.updateLastBolusTime('morning', '2026-07-16T09:30:00.000Z');
+
+    const entries = store.getEntriesFor(today, 'morning');
+    const bolusEntries = entries.filter(e => e.type === 'bolus');
+    expect(bolusEntries.length).toBe(2);
+    // El primero (08:00) no se tocó
+    expect(bolusEntries[0].timeIso).toBe('2026-07-16T08:00:00.000Z');
+    // El segundo (era 09:00) ahora es 09:30
+    expect(bolusEntries[1].timeIso).toBe('2026-07-16T09:30:00.000Z');
+  });
+
+  it('updateLastBolusTime: no hace nada si no hay bolus registrado', () => {
+    expect(() => store.updateLastBolusTime('morning', '2026-07-16T09:30:00.000Z')).not.toThrow();
+    expect(store.getEntriesFor(toYmdLocal(), 'morning')).toEqual([]);
+  });
+
+  /* ============================================================
+   *  13. timeIso? en setGlucose y addNote (consistencia)
+   * ============================================================ */
+  it('setGlucose: acepta un timeIso personalizado para registrar glucosas pasadas', () => {
+    const today = toYmdLocal();
+    const pastTime = '2026-07-16T08:00:00.000Z';
+    store.setGlucose('morning', 120, pastTime);
+    expect(store.getGlucose(today, 'morning')).toBe(120);
+  });
+
+  it('addNote: acepta un timeIso personalizado para registrar notas pasadas', () => {
+    const today = toYmdLocal();
+    const pastTime = '2026-07-16T08:00:00.000Z';
+    store.addNote('morning', 'comida pesada', pastTime);
+    const notes = store.getNotesFor(today, 'morning');
+    expect(notes.length).toBe(1);
+    expect(notes[0].timeIso).toBe(pastTime);
+    expect(notes[0].text).toBe('comida pesada');
+  });
+
+  /* ============================================================
+   *  14. updateBolusTimeByTimestamp — editar un bolus concreto
+   * ============================================================ */
+  it('updateBolusTimeByTimestamp: cambia SOLO el bolus con ese timeIso', () => {
+    const today = toYmdLocal();
+    store.addBolus('morning', 1, '2026-07-16T08:00:00.000Z');
+    store.addBolus('morning', 2, '2026-07-16T09:00:00.000Z');
+    store.addBolus('morning', 3, '2026-07-16T10:00:00.000Z');
+
+    // Editamos SOLO el del medio
+    store.updateBolusTimeByTimestamp('morning', '2026-07-16T09:00:00.000Z', '2026-07-16T09:30:00.000Z');
+
+    const entries = store.getEntriesFor(today, 'morning');
+    const bolus = entries.filter(e => e.type === 'bolus');
+    expect(bolus.length).toBe(3);
+    expect(bolus[0].timeIso).toBe('2026-07-16T08:00:00.000Z'); // intacto
+    expect(bolus[1].timeIso).toBe('2026-07-16T09:30:00.000Z'); // editado
+    expect(bolus[2].timeIso).toBe('2026-07-16T10:00:00.000Z'); // intacto
+    // Las unidades no cambian
+    expect(bolus[1].units).toBe(2);
+  });
+
+  it('updateBolusTimeByTimestamp: no afecta nada si el timeIso no existe', () => {
+    const today = toYmdLocal();
+    store.addBolus('morning', 1, '2026-07-16T08:00:00.000Z');
+
+    store.updateBolusTimeByTimestamp('morning', '2099-01-01T00:00:00.000Z', '2026-07-16T09:00:00.000Z');
+
+    const entries = store.getEntriesFor(today, 'morning');
+    expect(entries.length).toBe(1);
+    expect(entries[0].timeIso).toBe('2026-07-16T08:00:00.000Z');
+  });
+
+  /* ============================================================
+   *  15. updateGlucoseTime y updateLastNoteTime
+   * ============================================================ */
+  it('updateGlucoseTime: cambia el timeIso de la glucosa del slot', () => {
+    const today = toYmdLocal();
+    store.setGlucose('morning', 120);
+    const oldTime = (store as any)._glucoseEntries().find(
+      (g: any) => g.dateYmd === today && g.slotId === 'morning'
+    ).timeIso;
+    expect(oldTime).toBeTruthy();
+
+    store.updateGlucoseTime('morning', '2026-07-16T08:00:00.000Z');
+
+    const newTime = (store as any)._glucoseEntries().find(
+      (g: any) => g.dateYmd === today && g.slotId === 'morning'
+    ).timeIso;
+    expect(newTime).toBe('2026-07-16T08:00:00.000Z');
+    // El valor no cambia
+    expect(store.getGlucose(today, 'morning')).toBe(120);
+  });
+
+  it('updateLastNoteTime: cambia el timeIso de la ÚLTIMA nota del slot', () => {
+    const today = toYmdLocal();
+    store.addNote('morning', 'primera', '2026-07-16T08:00:00.000Z');
+    store.addNote('morning', 'segunda', '2026-07-16T09:00:00.000Z');
+
+    store.updateLastNoteTime('morning', '2026-07-16T09:30:00.000Z');
+
+    const notes = store.getNotesFor(today, 'morning');
+    expect(notes.length).toBe(2);
+    expect(notes[0].timeIso).toBe('2026-07-16T08:00:00.000Z'); // primera intacta
+    expect(notes[1].timeIso).toBe('2026-07-16T09:30:00.000Z'); // segunda editada
+  });
 });

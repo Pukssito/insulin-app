@@ -181,8 +181,9 @@ export class InsulinStore {
   /* =======================
    *  API — mutations
    * ======================= */
-  toggleBasal(slotId: string) {
+  toggleBasal(slotId: string, timeIso?: string) {
     const dateYmd = this._today();
+    const time = timeIso ?? new Date().toISOString();
     this._entries.update(entries => {
       const idx = entries.findIndex(e =>
         e.dateYmd === dateYmd && e.slotId === slotId && e.type === 'basal'
@@ -190,18 +191,19 @@ export class InsulinStore {
       if (idx >= 0) {
         return [...entries.slice(0, idx), ...entries.slice(idx + 1)];
       }
-      return [...entries, { dateYmd, timeIso: new Date().toISOString(), slotId, type: 'basal', units: 1 }];
+      return [...entries, { dateYmd, timeIso: time, slotId, type: 'basal', units: 1 }];
     });
     this.saveToStorage();
   }
 
-  addBolus(slotId: string, units: number) {
+  addBolus(slotId: string, units: number, timeIso?: string) {
     if (!units || units <= 0) return;
     if (units < BOLUS_MIN || units > BOLUS_MAX) return;
     const dateYmd = this._today();
+    const time = timeIso ?? new Date().toISOString();
     this._entries.update(entries => [
       ...entries,
-      { dateYmd, timeIso: new Date().toISOString(), slotId, type: 'bolus', units }
+      { dateYmd, timeIso: time, slotId, type: 'bolus', units }
     ]);
     this.saveToStorage();
   }
@@ -220,8 +222,9 @@ export class InsulinStore {
     this.saveToStorage();
   }
 
-  setGlucose(slotId: string, value: number) {
+  setGlucose(slotId: string, value: number, timeIso?: string) {
     const dateYmd = this._today();
+    const time = timeIso ?? new Date().toISOString();
     this._glucoseEntries.update(entries => {
       const idx = entries.findIndex(g => g.dateYmd === dateYmd && g.slotId === slotId);
 
@@ -233,21 +236,22 @@ export class InsulinStore {
 
       if (idx >= 0) {
         const next = [...entries];
-        next[idx] = { ...next[idx], value, timeIso: new Date().toISOString() };
+        next[idx] = { ...next[idx], value, timeIso: time };
         return next;
       }
-      return [...entries, { dateYmd, timeIso: new Date().toISOString(), slotId, value }];
+      return [...entries, { dateYmd, timeIso: time, slotId, value }];
     });
     this.saveToStorage();
   }
 
-  addNote(slotId: string, text: string) {
+  addNote(slotId: string, text: string, timeIso?: string) {
     const trimmed = (text || '').trim();
     if (!trimmed) return;
     const dateYmd = this._today();
+    const time = timeIso ?? new Date().toISOString();
     this._noteEntries.update(notes => [
       ...notes,
-      { dateYmd, timeIso: new Date().toISOString(), slotId, text: trimmed }
+      { dateYmd, timeIso: time, slotId, text: trimmed }
     ]);
     this.saveToStorage();
   }
@@ -283,6 +287,115 @@ export class InsulinStore {
       }
       if (lastIdx < 0) return entries;
       return [...entries.slice(0, lastIdx), ...entries.slice(lastIdx + 1)];
+    });
+    this.saveToStorage();
+  }
+
+  /**
+   * Cambia el `timeIso` de la basal del slot de hoy.
+   * No hace nada si no hay basal registrada.
+   * Usado por la UI cuando el usuario edita la hora de una basal
+   * ya marcada (típicamente porque se inyectó antes y la marcó tarde).
+   */
+  updateBasalTime(slotId: string, newTimeIso: string) {
+    const dateYmd = this._today();
+    this._entries.update(entries => {
+      const idx = entries.findIndex(
+        e => e.dateYmd === dateYmd && e.slotId === slotId && e.type === 'basal'
+      );
+      if (idx < 0) return entries;
+      const next = [...entries];
+      next[idx] = { ...next[idx], timeIso: newTimeIso };
+      return next;
+    });
+    this.saveToStorage();
+  }
+
+  /**
+   * Cambia el `timeIso` del ÚLTIMO bolus del slot de hoy.
+   * No hace nada si no hay bolus registrado.
+   * Usado por la UI cuando el usuario edita la hora del último
+   * bolus (típicamente "me inyecté hace 1h y olvidé marcarlo").
+   */
+  updateLastBolusTime(slotId: string, newTimeIso: string) {
+    const dateYmd = this._today();
+    this._entries.update(entries => {
+      let lastIdx = -1;
+      for (let i = entries.length - 1; i >= 0; i--) {
+        const e = entries[i];
+        if (e.dateYmd === dateYmd && e.slotId === slotId && e.type === 'bolus') {
+          lastIdx = i;
+          break;
+        }
+      }
+      if (lastIdx < 0) return entries;
+      const next = [...entries];
+      next[lastIdx] = { ...next[lastIdx], timeIso: newTimeIso };
+      return next;
+    });
+    this.saveToStorage();
+  }
+
+  /**
+   * Cambia el `timeIso` de un bolus específico del slot, identificado
+   * por su `oldTimeIso`. Usado por la UI cuando el usuario edita la
+   * hora de un bolus concreto desde la lista.
+   *
+   * No hace nada si no se encuentra un bolus con ese timeIso
+   * (mismo slot, mismo día).
+   */
+  updateBolusTimeByTimestamp(slotId: string, oldTimeIso: string, newTimeIso: string) {
+    const dateYmd = this._today();
+    this._entries.update(entries => {
+      const idx = entries.findIndex(
+        e => e.dateYmd === dateYmd
+          && e.slotId === slotId
+          && e.type === 'bolus'
+          && e.timeIso === oldTimeIso
+      );
+      if (idx < 0) return entries;
+      const next = [...entries];
+      next[idx] = { ...next[idx], timeIso: newTimeIso };
+      return next;
+    });
+    this.saveToStorage();
+  }
+
+  /**
+   * Cambia el `timeIso` de la glucosa del slot de hoy.
+   * No hace nada si no hay glucosa registrada.
+   */
+  updateGlucoseTime(slotId: string, newTimeIso: string) {
+    const dateYmd = this._today();
+    this._glucoseEntries.update(entries => {
+      const idx = entries.findIndex(g => g.dateYmd === dateYmd && g.slotId === slotId);
+      if (idx < 0) return entries;
+      const next = [...entries];
+      next[idx] = { ...next[idx], timeIso: newTimeIso };
+      return next;
+    });
+    this.saveToStorage();
+  }
+
+  /**
+   * Cambia el `timeIso` de la ÚLTIMA nota del slot de hoy.
+   * No hace nada si no hay notas.
+   */
+  updateLastNoteTime(slotId: string, newTimeIso: string) {
+    const dateYmd = this._today();
+    this._noteEntries.update(notes => {
+      let lastIdx = -1;
+      for (let i = notes.length - 1; i >= 0; i--) {
+        const n = notes[i];
+        if (n.dateYmd === dateYmd && n.slotId === slotId) {
+          lastIdx = i;
+          break;
+        }
+      }
+      if (lastIdx < 0) return notes;
+      const next = [...notes];
+      next[lastIdx] = { ...next[lastIdx], timeIso: newTimeIso };
+      return next;
     });
     this.saveToStorage();
   }
