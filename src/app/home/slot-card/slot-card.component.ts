@@ -5,7 +5,15 @@ import { IonicModule } from '@ionic/angular';
 
 import { InsulinStore } from '../../../service/insulin.store';
 import { SlotConfig } from '../../../models/models';
-import { formatRange, formatRelativeTime } from '../../../utils/date-utils';
+import { formatRelativeTime } from '../../../utils/date-utils';
+import {
+  iconForSlot,
+  timeRangeForSlot,
+  glucoseClassFor,
+  bolusPillsFor,
+  bolusOverflowFor,
+  trimNoteText,
+} from './slot-card.helpers';
 
 /**
  * Tarjeta de una franja de insulina (mañana, tarde, noche, etc.).
@@ -16,8 +24,9 @@ import { formatRange, formatRelativeTime } from '../../../utils/date-utils';
  * eventos cuando el usuario interactúa — el padre (HomePage) decide
  * qué hacer (llamar al store, mostrar alerts, etc.).
  *
- * Estilos: el padre (HomePage) los provee vía SCSS global porque
- * comparten contexto visual con el resto de la página.
+ * La lógica pura (mapeo de icono, formateo de rango, clases de
+ * glucosa, pills de bolus, trim de notas) vive en slot-card.helpers.ts
+ * para poder testearla sin cargar Stencil/Ionic en jsdom.
  */
 @Component({
   selector: 'app-slot-card',
@@ -40,6 +49,8 @@ export class SlotCardComponent {
   reset = output<void>();
 
   quicks = [1, 2, 5];
+
+  // ===== Getters que delegan al store =====
 
   get basalDone(): boolean {
     return this.store.basalDone(this.today(), this.slot().id);
@@ -65,36 +76,33 @@ export class SlotCardComponent {
     return this.store.getLastEntryTime(this.today(), this.slot().id, 'bolus');
   }
 
+  // ===== Wrappers de helpers puros =====
+
   get timeRange(): string {
-    return formatRange(this.slot().startMin, this.slot().endMin);
+    return timeRangeForSlot(this.slot());
   }
 
   get icon(): string {
-    const id = this.slot().id;
-    if (id.includes('morning')) return '☀';
-    if (id.includes('afternoon')) return '⛅';
-    if (id.includes('night') || id.includes('evening')) return '☾';
-    return '⏱';
+    return iconForSlot(this.slot().id);
   }
 
   glucoseClass(value: number | null): string {
-    if (value == null) return '';
-    if (value < 70) return 'glucose-low';
-    if (value > 180) return 'glucose-high';
-    return 'glucose-normal';
+    return glucoseClassFor(value);
   }
 
   bolusArray(): number[] {
-    return Array.from({ length: Math.min(this.bolusSum, 15) }, (_, i) => i);
+    return bolusPillsFor(this.bolusSum);
   }
 
   bolusOverflow(): number {
-    return Math.max(0, this.bolusSum - 15);
+    return bolusOverflowFor(this.bolusSum);
   }
 
   relTime(iso: string | null): string {
     return formatRelativeTime(iso);
   }
+
+  // ===== Handlers de eventos del template =====
 
   onToggleBasal() { this.toggleBasal.emit(); }
   onAddBolus(units: number) { this.addBolus.emit(units); }
@@ -113,7 +121,7 @@ export class SlotCardComponent {
   }
 
   onAddNoteFromInput(text: string, target: HTMLIonInputElement | HTMLInputElement) {
-    const trimmed = (text || '').trim();
+    const trimmed = trimNoteText(text);
     if (!trimmed) return;
     this.addNote.emit(trimmed);
     // Limpiamos el input después de emitir

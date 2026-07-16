@@ -1,0 +1,53 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# Cancel runs anteriores si llega un push nuevo a la misma PR/branch.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: Tests + Build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: '**/package-lock.json'
+
+      # `npm ci` en lugar de `npm install`: instalación limpia y
+      # determinista desde el lockfile. Falla si el lockfile no
+      # está sincronizado con package.json (que es lo que queremos).
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run unit tests (Vitest)
+        run: npm run test:run
+
+      # Build de Angular CLI — verifica que TypeScript compila,
+      # los templates son válidos y no hay referencias rotas.
+      # El output no se despliega desde aquí; Capacitor/Android
+      # es release engineering y vive fuera de este workflow.
+      - name: Build (Angular CLI)
+        run: npm run build
+
+      - name: Upload build artifacts
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist-app
+          path: dist/app/
+          retention-days: 7
+          if-no-files-found: ignore
