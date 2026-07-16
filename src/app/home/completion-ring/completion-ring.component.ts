@@ -23,25 +23,7 @@ import { Component, input, computed } from '@angular/core';
       </div>
     </div>
   `,
-  styles: [`
-    .completion-ring {
-      position: relative;
-      width: 64px;
-      height: 64px;
-    }
-    .ring-svg { width: 100%; height: 100%; transform: rotate(0deg); }
-    .ring-bg { fill: none; stroke: var(--ion-color-step-200, #e0e0e0); stroke-width: 4; }
-    .ring-fg { fill: none; stroke: var(--ion-color-primary, #3880ff); stroke-width: 4; transition: stroke-dashoffset 0.4s ease; }
-    .completion-ring.is-done .ring-fg { stroke: var(--ion-color-success, #2dd36f); }
-    .ring-text {
-      position: absolute; inset: 0;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 0.95rem; font-weight: 600;
-    }
-    .ring-count { color: var(--ion-color-primary, #3880ff); }
-    .completion-ring.is-done .ring-count { color: var(--ion-color-success, #2dd36f); }
-    .ring-total { color: var(--ion-color-medium, #92949c); font-weight: 400; margin-left: 1px; }
-  `],
+  styleUrls: ['./completion-ring.component.scss'],
 })
 export class CompletionRingComponent {
   done = input.required<number>();

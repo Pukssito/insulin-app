@@ -1,0 +1,52 @@
+/* Estilos del anillo de progreso. Originalmente anidados en
+   .header-section { .completion-ring { ... } } de home.page.scss.
+   Al extraer a subcomponente, los aplanamos y los movemos aquí. */
+
+:host { display: inline-block; }
+
+.completion-ring {
+  position: relative;
+  width: 64px;
+  height: 64px;
+  flex-shrink: 0;
+}
+
+.ring-svg {
+  width: 100%;
+  height: 100%;
+  transform: rotate(0deg);
+
+  .ring-bg {
+    fill: none;
+    stroke: rgba(255, 255, 255, 0.08);
+    stroke-width: 4;
+  }
+
+  .ring-fg {
+    fill: none;
+    stroke: var(--ion-color-primary);
+    stroke-width: 4;
+    stroke-linecap: round;
+    transition: stroke-dashoffset 0.5s ease, stroke 0.3s ease;
+  }
+}
+
+.completion-ring.is-done .ring-fg {
+  stroke: var(--ion-color-success);
+}
+
+.ring-text {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: row;
+  color: #fff;
+  font-weight: 800;
+  line-height: 1;
+  pointer-events: none;
+}
+
+.ring-count { font-size: 1.05rem; }
+.ring-total { font-size: 0.7rem; opacity: 0.55; margin-left: 1px; }

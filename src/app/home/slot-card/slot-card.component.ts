@@ -24,6 +24,7 @@ import { formatRange, formatRelativeTime } from '../../../utils/date-utils';
   standalone: true,
   imports: [IonicModule, CommonModule, FormsModule],
   templateUrl: './slot-card.component.html',
+  styleUrls: ['./slot-card.component.scss'],
 })
 export class SlotCardComponent {
   private store = inject(InsulinStore);

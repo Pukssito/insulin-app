@@ -1,0 +1,47 @@
+/* Estilos de los chips de resumen. Originalmente en home.page.scss
+   bajo .summary-row > .summary-chip. La regla con estados
+   (.glucose-low / .glucose-high / .glucose-normal) vivía en el
+   padre pero ahora pertenece al subcomponente que pinta los chips. */
+
+:host { display: contents; }
+
+.summary-row { display: contents; }
+
+.summary-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  background: rgba(255, 255, 255, 0.06);
+  color: #ccc;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+
+  .chip-glyph-inline {
+    font-size: 0.95rem;
+    line-height: 1;
+  }
+
+  &.glucose-low {
+    background: rgba(255, 82, 82, 0.15);
+    color: #ff5252;
+    border-color: rgba(255, 82, 82, 0.35);
+    .chip-glyph-inline { color: #ff5252; }
+  }
+
+  &.glucose-high {
+    background: rgba(255, 167, 38, 0.15);
+    color: #ffa726;
+    border-color: rgba(255, 167, 38, 0.35);
+    .chip-glyph-inline { color: #ffa726; }
+  }
+
+  &.glucose-normal {
+    background: rgba(45, 211, 111, 0.12);
+    color: var(--ion-color-success);
+    border-color: rgba(45, 211, 111, 0.3);
+    .chip-glyph-inline { color: var(--ion-color-success); }
+  }
+}

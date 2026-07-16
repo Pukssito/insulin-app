@@ -5,7 +5,7 @@ import { Component, input, computed } from '@angular/core';
  * Componente dumb: recibe los valores, decide si mostrarlos y
  * aplica la clase CSS según el rango de la glucosa.
  *
- * Reglas de glucosa (idénticas al CSS previo):
+ * Reglas de glucosa (idénticas a las del SCSS):
  *   < 70  → glucose-low
  *   > 180 → glucose-high
  *   resto → glucose-normal
@@ -27,19 +27,7 @@ import { Component, input, computed } from '@angular/core';
       </div>
     }
   `,
-  styles: [`
-    :host { display: contents; }
-    .summary-chip {
-      display: inline-flex; align-items: center; gap: 4px;
-      padding: 4px 10px; border-radius: 999px;
-      background: var(--ion-color-step-100, #f4f4f4);
-      font-size: 0.85rem; font-weight: 500;
-    }
-    .summary-chip.glucose-low    { background: #ffe0e0; color: #b00020; }
-    .summary-chip.glucose-high   { background: #fff4cc; color: #8a6d00; }
-    .summary-chip.glucose-normal { background: #e0f5e9; color: #1b5e20; }
-    .chip-glyph-inline { font-size: 1rem; }
-  `],
+  styleUrls: ['./summary-chips.component.scss'],
 })
 export class SummaryChipsComponent {
   totalBolus = input.required<number>();
