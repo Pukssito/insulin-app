@@ -172,5 +172,32 @@ ion-card-title {
   font-weight: 500;
 }
 
+/* Popover del time picker: forzar tema oscuro.
+   El chrome del ion-popover no siempre hereda el color-scheme:dark
+   de Angular/Stencil, y sin esto se ve blanco. Usamos el gris de
+   las cards (#2f3640) para que el popover se vea como una "tarjeta
+   flotante" sobre el fondo de la app. */
+.time-picker-popover-wrapper {
+  --background: #2f3640;
+  --color: #eeeeee;
+  --ion-background-color: #2f3640;
+  --ion-text-color: #eeeeee;
+}
+
+/* El ion-datetime dentro del popover: el componente tiene su propio
+   shadow DOM y no hereda las custom properties del wrapper del popover.
+   Sin --background-rgb, el datetime calcula degradados internos desde
+   el valor por defecto (blanco), por eso se ve "blanco con degradado".
+   El formato es RGB separado por comas, SIN la función rgb(). */
+.time-picker-popover-wrapper ion-datetime {
+  --background: #2f3640;
+  --background-rgb: 47, 54, 64;
+  --title-color: #eeeeee;
+  --wheel-highlight-background: rgba(77, 182, 172, 0.25);
+  --wheel-highlight-border-radius: 12px;
+  --wheel-fade-background-rgb: 47, 54, 64;
+  border-radius: 12px;
+}
+
 
 

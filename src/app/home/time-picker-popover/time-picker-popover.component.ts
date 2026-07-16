@@ -35,7 +35,7 @@ import { IonicModule, PopoverController } from '@ionic/angular';
   `,
   styles: [`
     .time-picker-popover { padding: 12px; min-width: 260px; }
-    .popover-title { margin: 0 0 12px; font-size: 1rem; font-weight: 600; color: #fff; }
+    .popover-title { margin: 0 0 12px; font-size: 1rem; font-weight: 600; color: var(--ion-text-color); }
     .popover-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 8px; }
   `],
 })

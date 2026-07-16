@@ -166,6 +166,7 @@ export class SlotCardComponent {
         title: 'Cambiar hora de la basal',
         defaultTime: this.lastBasalTime || new Date().toISOString(),
       },
+      cssClass: 'time-picker-popover-wrapper',
     });
     await popover.present();
     const { data } = await popover.onDidDismiss();
@@ -185,6 +186,7 @@ export class SlotCardComponent {
         title: 'Cambiar hora del bolus',
         defaultTime: oldTimeIso,
       },
+      cssClass: 'time-picker-popover-wrapper',
     });
     await popover.present();
     const { data } = await popover.onDidDismiss();
@@ -208,6 +210,7 @@ export class SlotCardComponent {
         title: 'Cambiar hora de la glucosa',
         defaultTime: this.glucoseTime || new Date().toISOString(),
       },
+      cssClass: 'time-picker-popover-wrapper',
     });
     await popover.present();
     const { data } = await popover.onDidDismiss();
@@ -227,6 +230,7 @@ export class SlotCardComponent {
         title: 'Cambiar hora de la nota',
         defaultTime: oldTimeIso,
       },
+      cssClass: 'time-picker-popover-wrapper',
     });
     await popover.present();
     const { data } = await popover.onDidDismiss();
