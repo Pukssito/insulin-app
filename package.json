@@ -1,6 +1,6 @@
 {
   "name": "insulin-app",
-  "version": "0.0.2",
+  "version": "0.2.0",
   "private": true,
   "scripts": {
     "start": "ng serve",
