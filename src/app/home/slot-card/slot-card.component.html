@@ -1,0 +1,109 @@
+<ion-card [class]="'slot-card ' + slot().id" [ngClass]="{'is-done': basalDone, 'is-missed': isMissed()}">
+  <ion-card-header>
+    <div class="slot-header">
+      <div class="title-group">
+        <div class="icon-wrap" [class.is-done]="basalDone">
+          <span class="slot-glyph">{{ icon }}</span>
+          <span *ngIf="basalDone" class="icon-done-badge">✓</span>
+        </div>
+        <div>
+          <h2 class="slot-title">{{ slot().label }}</h2>
+          <p class="time-range">{{ timeRange.replace('-', '➔') }}</p>
+        </div>
+      </div>
+      <div *ngIf="isMissed()" class="missed-alert">
+        <span class="missed-glyph">⚠</span>
+        OLVIDADA
+      </div>
+    </div>
+  </ion-card-header>
+
+  <ion-card-content>
+    <!-- GLUCOSA -->
+    <div class="glucose-section section-glucose">
+      <div class="section-header">
+        <span class="section-glyph">💧</span>
+        <span>Glucosa</span>
+      </div>
+      <div class="glucose-input-wrapper" [ngClass]="glucoseClass(glucose)">
+        <ion-input type="number" inputmode="decimal"
+                   [value]="glucose"
+                   placeholder="---"
+                   (ionBlur)="onGlucoseBlur($event)"
+                   class="glucose-input"></ion-input>
+        <span class="unit-suffix">mg/dL</span>
+      </div>
+    </div>
+
+    <!-- BASAL -->
+    <div *ngIf="slot().kind === 'basal' || slot().kind === 'both'" class="basal-section section-basal">
+      <div class="section-header">
+        <span class="section-glyph">💉</span>
+        <span>Basal</span>
+        <span class="section-meta" *ngIf="basalDone">{{ relTime(lastBasalTime) }}</span>
+      </div>
+      <div class="status-row">
+        <div class="status-indicator" [class.done]="basalDone">
+          <span class="status-glyph">{{ basalDone ? '✓' : '○' }}</span>
+          <span>{{ basalDone ? 'Dosis aplicada' : 'Aún pendiente' }}</span>
+        </div>
+        <ion-button [fill]="basalDone ? 'clear' : 'solid'"
+                    [color]="basalDone ? 'medium' : 'primary'"
+                    (click)="onToggleBasal()" class="main-action-btn">
+          {{ basalDone ? 'Desmarcar' : 'Inyectar' }}
+        </ion-button>
+      </div>
+    </div>
+
+    <!-- BOLUS -->
+    <div *ngIf="slot().kind === 'bolus' || slot().kind === 'both'" class="bolus-container section-bolus">
+      <div class="section-header">
+        <span class="section-glyph">🔥</span>
+        <span>Bolus</span>
+        <span class="section-meta" *ngIf="bolusSum > 0">{{ bolusSum }}U · {{ relTime(lastBolusTime) }}</span>
+      </div>
+
+      <div class="bolus-visual" *ngIf="bolusSum > 0">
+        <span *ngFor="let i of bolusArray()" class="bolus-pill"></span>
+        <span *ngIf="bolusOverflow() > 0" class="bolus-overflow">+{{ bolusOverflow() }}</span>
+      </div>
+      <div class="bolus-empty" *ngIf="bolusSum === 0">
+        <span>Sin bolus</span>
+      </div>
+
+      <div class="unit-keyboard">
+        <ion-button fill="outline"
+                    [disabled]="bolusSum === 0"
+                    (click)="onRemoveLastBolus()"
+                    size="small"
+                    class="undo-btn"
+                    aria-label="Deshacer último bolus">
+          <span class="undo-glyph">↶</span>
+        </ion-button>
+        <ion-button fill="outline" *ngFor="let u of quicks" (click)="onAddBolus(u)" size="small">
+          +{{u}}
+        </ion-button>
+      </div>
+
+      <div class="note-input-wrapper">
+        <span class="note-glyph">✎</span>
+        <ion-input type="text" placeholder="¿Algo que anotar? (ej: comida, ejercicio...)"
+          #noteInput
+          (keyup.enter)="onAddNoteFromInput($any($event.target).value, noteInput)"></ion-input>
+      </div>
+
+      <div *ngIf="notes.length > 0" class="notes-list">
+        <div *ngFor="let n of notes" class="note-item">
+          <span class="note-time">{{ n.timeIso | date: 'HH:mm' }}</span>
+          <span class="note-text">{{ n.text }}</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="card-footer">
+      <ion-button size="small" fill="clear" color="medium" (click)="onReset()">
+        Reiniciar esta franja
+      </ion-button>
+    </div>
+  </ion-card-content>
+</ion-card>
