@@ -1,7 +1,7 @@
 import { Component, inject, input, output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { IonicModule, PopoverController } from '@ionic/angular';
+import { IonicModule, PopoverController, ToastController } from '@ionic/angular';
 
 import { InsulinStore } from '../../../service/insulin.store';
 import { SlotConfig } from '../../../models/models';
@@ -39,6 +39,7 @@ import { TimePickerPopoverComponent } from '../time-picker-popover/time-picker-p
 export class SlotCardComponent {
   private store = inject(InsulinStore);
   private popoverCtrl = inject(PopoverController);
+  private toast = inject(ToastController);
 
   slot = input.required<SlotConfig>();
   today = input.required<string>();
@@ -171,7 +172,11 @@ export class SlotCardComponent {
     await popover.present();
     const { data } = await popover.onDidDismiss();
     if (data?.timeIso) {
-      this.store.updateBasalTime(this.slot().id, data.timeIso);
+      try {
+        this.store.updateBasalTime(this.slot().id, data.timeIso);
+      } catch (err: any) {
+        await this.presentError(err?.message ?? 'No se pudo guardar la hora');
+      }
     }
   }
 
@@ -191,11 +196,15 @@ export class SlotCardComponent {
     await popover.present();
     const { data } = await popover.onDidDismiss();
     if (data?.timeIso) {
-      this.store.updateBolusTimeByTimestamp(
-        this.slot().id,
-        oldTimeIso,
-        data.timeIso
-      );
+      try {
+        this.store.updateBolusTimeByTimestamp(
+          this.slot().id,
+          oldTimeIso,
+          data.timeIso
+        );
+      } catch (err: any) {
+        await this.presentError(err?.message ?? 'No se pudo guardar la hora');
+      }
     }
   }
 
@@ -215,7 +224,11 @@ export class SlotCardComponent {
     await popover.present();
     const { data } = await popover.onDidDismiss();
     if (data?.timeIso) {
-      this.store.updateGlucoseTime(this.slot().id, data.timeIso);
+      try {
+        this.store.updateGlucoseTime(this.slot().id, data.timeIso);
+      } catch (err: any) {
+        await this.presentError(err?.message ?? 'No se pudo guardar la hora');
+      }
     }
   }
 
@@ -235,7 +248,26 @@ export class SlotCardComponent {
     await popover.present();
     const { data } = await popover.onDidDismiss();
     if (data?.timeIso) {
-      this.store.updateLastNoteTime(this.slot().id, data.timeIso);
+      try {
+        this.store.updateLastNoteTime(this.slot().id, data.timeIso);
+      } catch (err: any) {
+        await this.presentError(err?.message ?? 'No se pudo guardar la hora');
+      }
     }
+  }
+
+  /**
+   * Muestra un toast de error en la parte superior. Se usa cuando el
+   * store rechaza una operación (ej. hora futura) para que el usuario
+   * sepa que su cambio no se guardó.
+   */
+  private async presentError(message: string) {
+    const t = await this.toast.create({
+      message,
+      duration: 3000,
+      position: 'top',
+      color: 'danger',
+    });
+    await t.present();
   }
 }

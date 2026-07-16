@@ -418,7 +418,9 @@ describe('InsulinStore', () => {
     const today = toYmdLocal();
     store.addBolus('morning', 1, '2026-07-16T08:00:00.000Z');
 
-    store.updateBolusTimeByTimestamp('morning', '2099-01-01T00:00:00.000Z', '2026-07-16T09:00:00.000Z');
+    // oldTimeIso inexistente pero PASADO (no futuro, para que pase
+    // la validación de "no hora futura" en el store)
+    store.updateBolusTimeByTimestamp('morning', '2025-01-01T00:00:00.000Z', '2026-07-16T09:00:00.000Z');
 
     const entries = store.getEntriesFor(today, 'morning');
     expect(entries.length).toBe(1);
@@ -457,5 +459,26 @@ describe('InsulinStore', () => {
     expect(notes.length).toBe(2);
     expect(notes[0].timeIso).toBe('2026-07-16T08:00:00.000Z'); // primera intacta
     expect(notes[1].timeIso).toBe('2026-07-16T09:30:00.000Z'); // segunda editada
+  });
+
+  /* ============================================================
+   *  16. assertNotFuture — todas las mutaciones rechazan hora futura
+   * ============================================================ */
+  it('mutaciones: rechazan timeIso futuro con throw (defensa contra datos incorrectos)', () => {
+    const future = new Date(Date.now() + 60 * 60_000).toISOString(); // +1h
+
+    // Las 9 mutaciones que aceptan timeIso deben lanzar
+    expect(() => store.addBolus('morning', 1, future)).toThrow(/hora futura/);
+    expect(() => store.toggleBasal('morning', future)).toThrow(/hora futura/);
+    expect(() => store.setGlucose('morning', 100, future)).toThrow(/hora futura/);
+    expect(() => store.addNote('morning', 'test', future)).toThrow(/hora futura/);
+    expect(() => store.updateBasalTime('morning', future)).toThrow(/hora futura/);
+    expect(() => store.updateLastBolusTime('morning', future)).toThrow(/hora futura/);
+    expect(() => store.updateBolusTimeByTimestamp('morning', future, future)).toThrow(/hora futura/);
+    expect(() => store.updateGlucoseTime('morning', future)).toThrow(/hora futura/);
+    expect(() => store.updateLastNoteTime('morning', future)).toThrow(/hora futura/);
+
+    // Sanity: si no se pasa timeIso, debe seguir funcionando con hora actual
+    expect(() => store.toggleBasal('morning')).not.toThrow();
   });
 });

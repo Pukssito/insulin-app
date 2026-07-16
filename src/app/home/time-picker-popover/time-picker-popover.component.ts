@@ -26,6 +26,7 @@ import { IonicModule, PopoverController } from '@ionic/angular';
         presentation="time"
         [showDefaultButtons]="false"
         [minuteValues]="[0,5,10,15,20,25,30,35,40,45,50,55]"
+        [max]="now"
         size="cover"></ion-datetime>
       <div class="popover-actions">
         <ion-button fill="clear" size="small" (click)="cancel()">Cancelar</ion-button>
@@ -44,12 +45,13 @@ export class TimePickerPopoverComponent implements OnInit {
   @Input() defaultTime = '';
 
   selectedTime = '';
+  now = new Date().toISOString();
 
   constructor(private popoverCtrl: PopoverController) {}
 
   ngOnInit() {
     // Si defaultTime viene vacío, usamos la hora actual
-    this.selectedTime = this.defaultTime || new Date().toISOString();
+    this.selectedTime = this.defaultTime || this.now;
   }
 
   cancel() {
