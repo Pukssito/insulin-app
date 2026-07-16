@@ -39,3 +39,7 @@ export function buildSlotsFromBrands(brands: InsulinBrand[]): SlotConfig[] {
   }
   return slots;
 }
+
+// Changelog interno: añadir aquí cualquier cambio de comportamiento que
+// pueda afectar a tests o a la app. Útil para diffs de PRs futuras.
+// 2026-07-17 — añadida franja "Cena" (18-23h) para PRANDIAL. Antes 2 franjas.
