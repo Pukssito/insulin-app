@@ -13,14 +13,22 @@ const brand = (overrides: Partial<InsulinBrand>): InsulinBrand => ({
 });
 
 describe('buildSlotsFromBrands', () => {
-  it('PRANDIAL: genera "Mañana" y "Tarde" como bolus', () => {
+  it('PRANDIAL: genera "Mañana", "Tarde" y "Cena" como bolus', () => {
     const slots = buildSlotsFromBrands([
       brand({ id: 'fiasp', class: 'prandial', speed: 'ultrarrapida' }),
     ]);
 
-    expect(slots).toHaveLength(2);
-    expect(slots.map(s => s.id)).toEqual(['morning', 'afternoon']);
+    expect(slots).toHaveLength(3);
+    expect(slots.map(s => s.id)).toEqual(['morning', 'afternoon', 'evening']);
     expect(slots.every(s => s.kind === 'bolus')).toBe(true);
+    // Cena cubre 18-23 (estándar España: cenar 21-22h)
+    expect(slots[2]).toMatchObject({
+      id: 'evening',
+      label: 'Cena',
+      startMin: 18 * 60,
+      endMin: 23 * 60,
+      kind: 'bolus',
+    });
   });
 
   it('BASAL PROLONGADA: genera "Basal noche" como basal (1 al día)', () => {
@@ -64,12 +72,13 @@ describe('buildSlotsFromBrands', () => {
       brand({ id: 'lantus', class: 'basal', speed: 'prolongada' }),
     ]);
 
-    // 2 prandial + 1 basal prolongada = 3
-    expect(slots).toHaveLength(3);
+    // 3 prandial (mañana/tarde/cena) + 1 basal prolongada = 4
+    expect(slots).toHaveLength(4);
     const ids = slots.map(s => s.id);
     expect(new Set(ids).size).toBe(ids.length); // sin duplicados
     expect(ids).toContain('morning');
     expect(ids).toContain('afternoon');
+    expect(ids).toContain('evening');
     expect(ids).toContain('basal_night');
   });
 
