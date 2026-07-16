@@ -12,11 +12,11 @@
 
   <ion-segment [(ngModel)]="tab" mode="ios" class="custom-segment">
     <ion-segment-button value="pen" layout="icon-top">
-      <ion-icon name="color-filter-outline"></ion-icon>
+      <span class="seg-glyph">✎</span>
       <ion-label>Plumas</ion-label>
     </ion-segment-button>
     <ion-segment-button value="vial" layout="icon-top">
-      <ion-icon name="flask-outline"></ion-icon>
+      <span class="seg-glyph">⚗</span>
       <ion-label>Viales</ion-label>
     </ion-segment-button>
   </ion-segment>
@@ -33,7 +33,7 @@
          (click)="toggle(b.id)">
       
       <div class="card-selection-indicator">
-        <ion-icon [name]="selected.has(b.id) ? 'checkmark-circle' : 'add-circle-outline'"></ion-icon>
+        <span class="sel-glyph">{{ selected.has(b.id) ? '✓' : '＋' }}</span>
       </div>
 
       <div class="card-body">
@@ -48,12 +48,12 @@
   </div>
 
   <div class="fixed-footer">
-    <ion-button expand="block" 
-                [disabled]="selected.size===0" 
+    <ion-button expand="block"
+                [disabled]="selected.size===0"
                 (click)="save()"
                 class="save-btn shadow-btn">
       Guardar y continuar
-      <ion-icon name="arrow-forward-outline" slot="end"></ion-icon>
+      <span class="arrow-glyph" slot="end">→</span>
     </ion-button>
   </div>
 </ion-content>

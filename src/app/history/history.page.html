@@ -1,9 +1,12 @@
 <ion-header class="ion-no-border">
   <ion-toolbar mode="ios">
     <ion-buttons slot="start">
-      <ion-back-button defaultHref="/home" icon="chevron-back-outline"></ion-back-button>
+      <ion-button routerLink="/home" fill="clear" class="header-pill back-pill">
+        <span class="back-glyph">‹</span>
+        <span class="pill-label">Hoy</span>
+      </ion-button>
     </ion-buttons>
-    <ion-title class="ion-text-center">Historial</ion-title>
+    <ion-title class="ion-text-center header-title">Historial</ion-title>
   </ion-toolbar>
 </ion-header>
 
@@ -23,7 +26,7 @@
   </div>
 
   <div *ngIf="!selectedDate" class="selection-prompt">
-    <ion-icon name="arrow-up-outline"></ion-icon>
+    <span class="prompt-glyph">↑</span>
     <p>Toca un día para ver los detalles</p>
   </div>
 
@@ -33,11 +36,11 @@
       <h2>{{ selectedDate | date: 'EEEE, d MMMM' }}</h2>
       <div class="summary-pills">
         <ion-chip color="danger" *ngIf="getDaySummary(selectedDate).avgGlucose > 0">
-          <ion-icon name="water"></ion-icon>
+          <span class="chip-glyph">💧</span>
           {{ getDaySummary(selectedDate).avgGlucose }} mg/dL
         </ion-chip>
         <ion-chip color="primary">
-          <ion-icon name="medkit"></ion-icon>
+          <span class="chip-glyph">💉</span>
           {{ getDaySummary(selectedDate).bolusSum }}U Bolus
         </ion-chip>
       </div>
@@ -50,7 +53,7 @@
         <div *ngFor="let g of getGlucose(selectedDate)" class="detail-item glucose">
           <span class="time">{{ g.timeIso | date: 'HH:mm' }}</span>
           <span class="value">{{ g.value }} mg/dL</span>
-          <span class="slot">{{ g.slotId }}</span>
+          <span class="slot">{{ slotLabel(g.slotId) }}</span>
         </div>
       </div>
 
@@ -60,10 +63,20 @@
         <div *ngFor="let e of getEntries(selectedDate)" class="detail-item dose">
           <span class="time">{{ e.timeIso | date: 'HH:mm' }}</span>
           <span class="value">{{ e.units }}U {{ e.type }}</span>
-          <span class="slot">{{ e.slotId }}</span>
+          <span class="slot">{{ slotLabel(e.slotId) }}</span>
         </div>
         <div *ngIf="getEntries(selectedDate).length === 0" class="no-data-msg">
           No hay inyecciones registradas este día.
+        </div>
+      </div>
+
+      <!-- Notas -->
+      <div class="section-title" *ngIf="getNotes(selectedDate).length > 0">Notas</div>
+      <div class="detail-list">
+        <div *ngFor="let n of getNotes(selectedDate)" class="detail-item note">
+          <span class="time">{{ n.timeIso | date: 'HH:mm' }}</span>
+          <span class="value note-text">{{ n.text }}</span>
+          <span class="slot">{{ slotLabel(n.slotId) }}</span>
         </div>
       </div>
     </div>

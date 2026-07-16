@@ -29,20 +29,19 @@
         "serve": {
           "builder": "@angular-devkit/build-angular:dev-server",
           "options": {
-            "browserTarget": "app:build",
+            "buildTarget": "app:build",
             "port": 8100,
             "host": "localhost"
           },
           "configurations": {
             "production": {
-              "browserTarget": "app:build:production"
+              "buildTarget": "app:build:production"
             }
           }
         }
       }
     }
   },
-  "defaultProject": "app",
   "cli": {
     "analytics": "3353aa83-6f3a-4c91-9a71-f2cf5007a9c3"
   }

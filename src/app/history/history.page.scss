@@ -26,7 +26,11 @@
   align-items: center;
   padding: 2rem;
   opacity: 0.3;
-  ion-icon { font-size: 3rem; margin-bottom: 0.5rem; }
+  .prompt-glyph {
+    font-size: 3rem;
+    line-height: 1;
+    margin-bottom: 0.5rem;
+  }
   p { font-size: 1.1rem; font-weight: 600; }
 }
 
@@ -53,7 +57,11 @@
         height: 32px;
         font-weight: 700;
         font-size: 0.8rem;
-        ion-icon { font-size: 1rem; }
+        .chip-glyph {
+          font-size: 1rem;
+          line-height: 1;
+          margin-right: 4px;
+        }
       }
     }
   }

@@ -1,12 +1,15 @@
 <ion-header class="ion-no-border">
   <ion-toolbar mode="ios">
     <ion-buttons slot="start">
-      <ion-back-button defaultHref="/setup" text="Configuración" icon="settings-outline"></ion-back-button>
+      <ion-button (click)="goSetup()" fill="clear" class="header-pill config-pill">
+        <span class="pill-glyph" slot="start">⚙</span>
+        <span class="pill-label">Configuración</span>
+      </ion-button>
     </ion-buttons>
-    <ion-title>Insulina Diario</ion-title>
+    <ion-title class="header-title">Insulina Diario</ion-title>
     <ion-buttons slot="end">
-      <ion-button (click)="resetAll()" color="danger" fill="clear">
-        <ion-icon slot="icon-only" name="trash-outline"></ion-icon>
+      <ion-button (click)="confirmResetAll()" fill="clear" class="header-pill trash-pill" aria-label="Borrar todo el día">
+        <span class="trash-glyph">🗑</span>
       </ion-button>
     </ion-buttons>
   </ion-toolbar>
@@ -16,13 +19,38 @@
   <!-- Tarjeta de Fecha Hoy (con acceso al historial) -->
   <div class="header-section" (click)="goHistory()">
     <div class="header-flex">
-      <div>
+      <div class="header-text">
         <h2 class="day-title">Hoy</h2>
         <p class="date-subtitle">{{ today | date: 'EEEE, d MMMM yyyy' }}</p>
       </div>
-      <div class="history-pill">
-        <ion-icon name="calendar-clear-outline"></ion-icon>
-        <span>Historial</span>
+      <div class="header-right" (click)="$event.stopPropagation()">
+        <div class="completion-ring" [class.is-done]="basalCompletion === 1" *ngIf="daySummary.basalExpected > 0">
+          <svg viewBox="0 0 50 50" class="ring-svg">
+            <circle cx="25" cy="25" r="22" class="ring-bg" />
+            <circle cx="25" cy="25" r="22" class="ring-fg"
+                    [attr.stroke-dasharray]="ringCircumference"
+                    [attr.stroke-dashoffset]="ringDashoffset"
+                    transform="rotate(-90 25 25)" />
+          </svg>
+          <div class="ring-text">
+            <span class="ring-count">{{ daySummary.basalDone }}</span>
+            <span class="ring-total">/{{ daySummary.basalExpected }}</span>
+          </div>
+        </div>
+        <div class="history-pill" (click)="goHistory()">
+          <span class="cal-glyph">📅</span>
+          <span>Historial</span>
+        </div>
+      </div>
+    </div>
+    <div class="summary-row" *ngIf="daySummary.basalExpected > 0 || daySummary.totalBolus > 0 || daySummary.avgGlucose">
+      <div class="summary-chip" *ngIf="daySummary.totalBolus > 0">
+        <span class="chip-glyph-inline">🔥</span>
+        <span>{{ daySummary.totalBolus }}U bolus</span>
+      </div>
+      <div class="summary-chip" *ngIf="daySummary.avgGlucose" [class]="glucoseClass(daySummary.avgGlucose)">
+        <span class="chip-glyph-inline">💧</span>
+        <span>Media {{ daySummary.avgGlucose }} mg/dL</span>
       </div>
     </div>
   </div>
@@ -34,14 +62,17 @@
         <ion-card-header>
           <div class="slot-header">
             <div class="title-group">
-              <ion-icon [name]="getSlotIcon(s.id)" class="slot-icon"></ion-icon>
+              <div class="icon-wrap" [class.is-done]="basalDone(s)">
+                <span class="slot-glyph">{{ getSlotIcon(s.id) }}</span>
+                <span *ngIf="basalDone(s)" class="icon-done-badge">✓</span>
+              </div>
               <div>
                 <h2 class="slot-title">{{ s.label }}</h2>
                 <p class="time-range">{{ range(s).replace('-', '➔') }}</p>
               </div>
             </div>
             <div *ngIf="missed.includes(s.id)" class="missed-alert">
-              <ion-icon name="alert-circle"></ion-icon>
+              <span class="missed-glyph">⚠</span>
               OLVIDADA
             </div>
           </div>
@@ -49,14 +80,14 @@
 
         <ion-card-content>
           <!-- Sección GLUCOSA -->
-          <div class="glucose-section">
-            <div class="glucose-header">
-              <ion-icon name="water-outline"></ion-icon>
-              <span>Nivel de azúcar</span>
+          <div class="glucose-section section-glucose">
+            <div class="section-header">
+              <span class="section-glyph">💧</span>
+              <span>Glucosa</span>
             </div>
-            <div class="glucose-input-wrapper">
-              <ion-input type="number" 
-                         [value]="svc.getGlucose(today, s.id)" 
+            <div class="glucose-input-wrapper" [ngClass]="glucoseClass(svc.getGlucose(today, s.id))">
+              <ion-input type="number" inputmode="decimal"
+                         [value]="svc.getGlucose(today, s.id)"
                          placeholder="---"
                          (ionChange)="svc.setGlucose(s.id, $any($event.target).value)"
                          class="glucose-input"></ion-input>
@@ -65,40 +96,71 @@
           </div>
 
           <!-- Sección BASAL -->
-          <div *ngIf="s.kind === 'basal' || s.kind === 'both'" class="status-row">
-            <div class="status-indicator" [class.done]="basalDone(s)">
-              <ion-icon [name]="basalDone(s) ? 'checkmark-circle' : 'ellipse'"></ion-icon>
-              <span>{{ basalDone(s) ? 'Dosis aplicada' : 'Aún pendiente' }}</span>
+          <div *ngIf="s.kind === 'basal' || s.kind === 'both'" class="basal-section section-basal">
+            <div class="section-header">
+              <span class="section-glyph">💉</span>
+              <span>Basal</span>
+              <span class="section-meta" *ngIf="basalDone(s)">{{ relTime(lastBasalTime(s)) }}</span>
             </div>
-            <ion-button [fill]="basalDone(s) ? 'clear' : 'solid'" 
-                        [color]="basalDone(s) ? 'medium' : 'primary'"
-                        (click)="toggleBasal(s)" class="main-action-btn">
-              {{ basalDone(s) ? 'Desmarcar' : 'Inyectar' }}
-            </ion-button>
+            <div class="status-row">
+              <div class="status-indicator" [class.done]="basalDone(s)">
+                <span class="status-glyph">{{ basalDone(s) ? '✓' : '○' }}</span>
+                <span>{{ basalDone(s) ? 'Dosis aplicada' : 'Aún pendiente' }}</span>
+              </div>
+              <ion-button [fill]="basalDone(s) ? 'clear' : 'solid'"
+                          [color]="basalDone(s) ? 'medium' : 'primary'"
+                          (click)="toggleBasal(s)" class="main-action-btn">
+                {{ basalDone(s) ? 'Desmarcar' : 'Inyectar' }}
+              </ion-button>
+            </div>
           </div>
 
           <!-- Sección BOLUS -->
-          <div *ngIf="s.kind === 'bolus' || s.kind === 'both'" class="bolus-container">
-            <div class="bolus-display">
-              <span class="unit-count">{{ bolusSum(s) }}</span>
-              <span class="unit-label">Unidades extra</span>
+          <div *ngIf="s.kind === 'bolus' || s.kind === 'both'" class="bolus-container section-bolus">
+            <div class="section-header">
+              <span class="section-glyph">🔥</span>
+              <span>Bolus</span>
+              <span class="section-meta" *ngIf="bolusSum(s) > 0">{{ bolusSum(s) }}U · {{ relTime(lastBolusTime(s)) }}</span>
             </div>
-            
+
+            <div class="bolus-visual" *ngIf="bolusSum(s) > 0">
+              <span *ngFor="let i of bolusArray(s)" class="bolus-pill"></span>
+              <span *ngIf="bolusOverflow(s) > 0" class="bolus-overflow">+{{ bolusOverflow(s) }}</span>
+            </div>
+            <div class="bolus-empty" *ngIf="bolusSum(s) === 0">
+              <span>Sin bolus</span>
+            </div>
+
             <div class="unit-keyboard">
+              <ion-button fill="outline"
+                          [disabled]="bolusSum(s) === 0"
+                          (click)="removeLastBolus(s)"
+                          size="small"
+                          class="undo-btn"
+                          aria-label="Deshacer último bolus">
+                <span class="undo-glyph">↶</span>
+              </ion-button>
               <ion-button fill="outline" *ngFor="let u of quicks" (click)="addBolus(s,u)" size="small">
                 +{{u}}
               </ion-button>
             </div>
 
             <div class="note-input-wrapper">
-              <ion-icon name="create-outline"></ion-icon>
+              <span class="note-glyph">✎</span>
               <ion-input type="text" placeholder="¿Algo que anotar? (ej: comida, ejercicio...)"
                 (keyup.enter)="addComment(s, $any($event.target).value); $any($event.target).value=''"></ion-input>
+            </div>
+
+            <div *ngIf="svc.getNotesFor(today, s.id).length > 0" class="notes-list">
+              <div *ngFor="let n of svc.getNotesFor(today, s.id)" class="note-item">
+                <span class="note-time">{{ n.timeIso | date: 'HH:mm' }}</span>
+                <span class="note-text">{{ n.text }}</span>
+              </div>
             </div>
           </div>
 
           <div class="card-footer">
-            <ion-button size="small" fill="clear" color="medium" (click)="resetSlot(s)">
+            <ion-button size="small" fill="clear" color="medium" (click)="confirmResetSlot(s)">
               Reiniciar esta franja
             </ion-button>
           </div>
@@ -107,9 +169,4 @@
     </ng-container>
   </div>
 
-  <div class="bottom-actions ion-margin-top">
-    <ion-button expand="block" fill="outline" color="warning" (click)="simulate()">
-      Simular Olvido (Prueba)
-    </ion-button>
-  </div>
 </ion-content>

@@ -23,3 +23,10 @@ export interface GlucoseEntry {
   slotId: string;
   value: number; // mg/dL
 }
+
+export interface NoteEntry {
+  dateYmd: string;
+  timeIso: string;
+  slotId: string;
+  text: string;
+}

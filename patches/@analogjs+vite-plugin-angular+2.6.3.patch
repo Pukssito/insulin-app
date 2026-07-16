@@ -1,0 +1,44 @@
+diff --git a/node_modules/@analogjs/vite-plugin-angular/src/lib/compiler/compile.js b/node_modules/@analogjs/vite-plugin-angular/src/lib/compiler/compile.js
+index 6508009..834c386 100644
+--- a/node_modules/@analogjs/vite-plugin-angular/src/lib/compiler/compile.js
++++ b/node_modules/@analogjs/vite-plugin-angular/src/lib/compiler/compile.js
+@@ -1,4 +1,5 @@
+-import * as ts from 'typescript';
++import _ts from 'typescript';
++const ts = _ts.default ?? _ts;
+ import * as fs from 'node:fs';
+ import * as path from 'node:path';
+ import * as o from '@angular/compiler';
+diff --git a/node_modules/@analogjs/vite-plugin-angular/src/lib/compiler/defer.js b/node_modules/@analogjs/vite-plugin-angular/src/lib/compiler/defer.js
+index 3b97d33..65be273 100644
+--- a/node_modules/@analogjs/vite-plugin-angular/src/lib/compiler/defer.js
++++ b/node_modules/@analogjs/vite-plugin-angular/src/lib/compiler/defer.js
+@@ -1,4 +1,5 @@
+-import * as ts from 'typescript';
++import _ts from 'typescript';
++const ts = _ts.default ?? _ts;
+ import * as o from '@angular/compiler';
+ /** Recursively collect all DeferredBlock nodes from a template AST. */
+ export function collectDeferBlocks(nodes) {
+diff --git a/node_modules/@analogjs/vite-plugin-angular/src/lib/compiler/js-emitter.js b/node_modules/@analogjs/vite-plugin-angular/src/lib/compiler/js-emitter.js
+index 73e3f25..b81e2f5 100644
+--- a/node_modules/@analogjs/vite-plugin-angular/src/lib/compiler/js-emitter.js
++++ b/node_modules/@analogjs/vite-plugin-angular/src/lib/compiler/js-emitter.js
+@@ -1,4 +1,5 @@
+-import * as ts from 'typescript';
++import _ts from 'typescript';
++const ts = _ts.default ?? _ts;
+ import * as o from '@angular/compiler';
+ /** Shared printer — only used as fallback for complex WrappedNodeExpr (e.g. decorator args). */
+ const sharedPrinter = ts.createPrinter({ removeComments: true });
+diff --git a/node_modules/@analogjs/vite-plugin-angular/src/lib/compiler/utils.js b/node_modules/@analogjs/vite-plugin-angular/src/lib/compiler/utils.js
+index f48a255..d351917 100644
+--- a/node_modules/@analogjs/vite-plugin-angular/src/lib/compiler/utils.js
++++ b/node_modules/@analogjs/vite-plugin-angular/src/lib/compiler/utils.js
+@@ -1,4 +1,5 @@
+-import * as ts from 'typescript';
++import _ts from 'typescript';
++const ts = _ts.default ?? _ts;
+ import * as path from 'node:path';
+ /** Collect type-only imported names: `import type { X }` and `import { type X }`. */
+ export function collectTypeOnlyImports(sf) {

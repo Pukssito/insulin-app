@@ -8,8 +8,8 @@
   margin-bottom: 2rem;
   --background: #2f3640;
   border-radius: 16px;
-  padding: 4px; 
-  min-height: 58px; 
+  padding: 4px;
+  min-height: 64px;
 
   ion-segment-button {
     --color: #999;
@@ -17,17 +17,28 @@
     --indicator-color: var(--ion-color-primary);
     --border-radius: 12px;
     margin: 2px;
-    
-    ion-label {
-      margin: 2px 0 4px 0 !important;
-      font-weight: 500;
-      font-size: 0.75rem;
-      letter-spacing: 0.2px;
+    min-height: 56px;
+
+    .button-native {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
     }
 
-    ion-icon {
-      margin: 4px 0 0 0 !important;
+    .seg-glyph {
       font-size: 1.3rem;
+      line-height: 1;
+      color: inherit;
+    }
+
+    ion-label {
+      margin: 0 !important;
+      font-weight: 600;
+      font-size: 0.9rem;
+      letter-spacing: 0.3px;
+      text-transform: none;
+      transform: none !important;
     }
   }
 }
@@ -71,10 +82,14 @@
     position: absolute;
     top: 10px;
     right: 10px;
-    ion-icon { font-size: 1.5rem; color: #666; }
+    .sel-glyph {
+      font-size: 1.6rem;
+      line-height: 1;
+      color: #666;
+    }
   }
 
-  &.is-selected .card-selection-indicator ion-icon {
+  &.is-selected .card-selection-indicator .sel-glyph {
     color: var(--ion-color-primary);
   }
 
@@ -132,6 +147,13 @@
   --padding-bottom: 1.2rem;
   font-weight: 700;
   margin: 0;
+
+  .arrow-glyph {
+    font-size: 1.2rem;
+    font-weight: 700;
+    line-height: 1;
+    margin-left: 8px;
+  }
 }
 
 .shadow-btn {
