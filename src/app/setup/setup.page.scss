@@ -55,7 +55,56 @@
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 12px;
-  margin-bottom: 6rem;
+  margin-bottom: 2rem;
+}
+
+.hidden-file-input {
+  display: none;
+}
+
+.backup-section {
+  margin-top: 2rem;
+  margin-bottom: 6rem;  /* espacio para que el footer fixed no tape los botones */
+  padding: 1.25rem;
+  background: rgba(47, 54, 64, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+
+  .backup-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--ion-color-primary);
+    margin: 0 0 0.5rem;
+  }
+
+  .backup-help {
+    font-size: 0.85rem;
+    color: #999;
+    margin: 0 0 1rem;
+    line-height: 1.4;
+  }
+
+  .backup-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .backup-btn {
+    --border-radius: 12px;
+    --padding-top: 0.8rem;
+    --padding-bottom: 0.8rem;
+    font-weight: 600;
+    margin: 0;
+    text-transform: none;
+    letter-spacing: 0.2px;
+  }
+
+  .backup-glyph {
+    font-size: 1.2rem;
+    line-height: 1;
+    margin-right: 6px;
+  }
 }
 
 .insulin-card {

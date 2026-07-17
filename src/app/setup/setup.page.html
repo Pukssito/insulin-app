@@ -5,6 +5,13 @@
 </ion-header>
 
 <ion-content class="ion-padding">
+  <!-- Input file oculto para importar backup -->
+  <input #fileInput
+         type="file"
+         accept=".json,application/json"
+         (change)="onFileSelected($event)"
+         class="hidden-file-input" />
+
   <div class="setup-header">
     <h1>Configuración</h1>
     <p>Selecciona las marcas de insulina que utilizas habitualmente.</p>
@@ -27,11 +34,11 @@
                  class="custom-searchbar"></ion-searchbar>
 
   <div class="insulin-grid">
-    <div *ngFor="let b of listForTab()" 
-         [class]="'insulin-card ' + b.class" 
+    <div *ngFor="let b of listForTab()"
+         [class]="'insulin-card ' + b.class"
          [ngClass]="{'is-selected': selected.has(b.id)}"
          (click)="toggle(b.id)">
-      
+
       <div class="card-selection-indicator">
         <span class="sel-glyph">{{ selected.has(b.id) ? '✓' : '＋' }}</span>
       </div>
@@ -44,6 +51,31 @@
         </div>
         <div class="brand-notes" *ngIf="b.notes">{{ b.notes }}</div>
       </div>
+    </div>
+  </div>
+
+  <!-- Sección de copia de seguridad -->
+  <div class="backup-section">
+    <h2 class="backup-title">Copia de seguridad</h2>
+    <p class="backup-help">
+      Guarda tus datos en un archivo para poder recuperarlos si pierdes o cambias de móvil.
+    </p>
+    <div class="backup-buttons">
+      <ion-button expand="block"
+                  fill="outline"
+                  (click)="onExportData()"
+                  class="backup-btn">
+        <span class="backup-glyph" slot="start">↗</span>
+        Exportar datos
+      </ion-button>
+      <ion-button expand="block"
+                  fill="outline"
+                  color="medium"
+                  (click)="onImportDataClick()"
+                  class="backup-btn">
+        <span class="backup-glyph" slot="start">↙</span>
+        Importar datos
+      </ion-button>
     </div>
   </div>
 

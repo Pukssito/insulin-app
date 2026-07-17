@@ -447,4 +447,59 @@ export class InsulinStore {
   getGlucoseForDate(dateYmd: string): GlucoseEntry[] {
     return this._glucoseEntries().filter(g => g.dateYmd === dateYmd);
   }
+
+  /* =======================
+   *  BACKUP / RESTORE
+   * ======================= */
+  /**
+   * Devuelve una snapshot del estado actual lista para serializar
+   * a JSON. NO incluye `version` ni `exportedAt`: eso lo añade
+   * `serializeBackup` en utils/backup.ts.
+   *
+   * Importante: hace clones de los arrays para que mutaciones
+   * posteriores al export no afecten al backup.
+   */
+  exportAll(): {
+    profile: InsulinProfile | null;
+    entries: DoseEntry[];
+    glucoseEntries: GlucoseEntry[];
+    noteEntries: NoteEntry[];
+  } {
+    return {
+      profile: this._profile() ? { brandIds: [...this._profile()!.brandIds] } : null,
+      entries: this._entries().map(e => ({ ...e })),
+      glucoseEntries: this._glucoseEntries().map(g => ({ ...g })),
+      noteEntries: this._noteEntries().map(n => ({ ...n })),
+    };
+  }
+
+  /**
+   * Reemplaza TODO el estado del store con los datos del backup.
+   * Borra lo anterior (entries, glucose, notes, profile) y carga
+   * lo nuevo, luego persiste en storage.
+   *
+   * El `today` y `nowMin` NO se tocan (son del momento presente,
+   * no del backup).
+   *
+   * NO valida el backup: eso va en la capa de UI
+   * (`parseAndValidateBackup` en utils/backup.ts).
+   */
+  async replaceAll(data: {
+    profile: InsulinProfile | null;
+    entries: DoseEntry[];
+    glucoseEntries: GlucoseEntry[];
+    noteEntries: NoteEntry[];
+  }): Promise<void> {
+    this._profile.set(data.profile);
+    this._entries.set([...data.entries]);
+    this._glucoseEntries.set([...data.glucoseEntries]);
+    this._noteEntries.set([...data.noteEntries]);
+
+    // Re-derivamos los slots del perfil (si hay)
+    if (data.profile) {
+      this.applyProfileToSlots();
+    }
+
+    await this.saveToStorage();
+  }
 }

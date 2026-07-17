@@ -481,4 +481,115 @@ describe('InsulinStore', () => {
     // Sanity: si no se pasa timeIso, debe seguir funcionando con hora actual
     expect(() => store.toggleBasal('morning')).not.toThrow();
   });
+
+  /* ============================================================
+   *  17. exportAll — snapshot del estado para backup
+   * ============================================================ */
+  it('exportAll: devuelve snapshot del estado actual', () => {
+    const today = toYmdLocal();
+    store.toggleBasal('morning');
+    store.addBolus('morning', 2);
+    store.setGlucose('morning', 120);
+    store.addNote('morning', 'test nota');
+
+    const snapshot = store.exportAll();
+
+    expect(snapshot.entries.length).toBe(2); // 1 basal + 1 bolus
+    expect(snapshot.glucoseEntries.length).toBe(1);
+    expect(snapshot.noteEntries.length).toBe(1);
+    expect(snapshot.profile).toBeNull(); // no hemos setProfileByIds
+  });
+
+  it('exportAll: hace clones (mutar el snapshot no afecta al store)', () => {
+    store.addBolus('morning', 2);
+    const snapshot = store.exportAll();
+    snapshot.entries[0].units = 999; // mutamos el snapshot
+
+    // El store NO debe verse afectado
+    const today = toYmdLocal();
+    expect(store.bolusSum(today, 'morning')).toBe(2);
+  });
+
+  it('exportAll: profile es null si no se ha configurado', () => {
+    const snapshot = store.exportAll();
+    expect(snapshot.profile).toBeNull();
+  });
+
+  /* ============================================================
+   *  18. replaceAll — restaurar desde backup
+   * ============================================================ */
+  it('replaceAll: reemplaza TODOS los datos (entries, glucose, notes, profile)', async () => {
+    const today = toYmdLocal();
+    // Primero: añadimos datos
+    store.addBolus('morning', 5);
+    store.setGlucose('morning', 200);
+    store.addNote('morning', 'vieja');
+
+    // Segundo: reemplazamos con backup vacío
+    await store.replaceAll({
+      profile: { brandIds: ['fiasp-pen'] },
+      entries: [],
+      glucoseEntries: [],
+      noteEntries: [],
+    });
+
+    expect(store.bolusSum(today, 'morning')).toBe(0);
+    expect(store.getGlucose(today, 'morning')).toBeNull();
+    expect(store.getNotesFor(today, 'morning')).toEqual([]);
+    expect(store.hasProfile()).toBe(true);
+  });
+
+  it('replaceAll: restaura los datos del backup', async () => {
+    const backup = {
+      profile: { brandIds: ['fiasp-pen', 'lantus-vial'] },
+      entries: [
+        { dateYmd: '2026-07-15', timeIso: '2026-07-15T08:00:00.000Z', slotId: 'morning', type: 'bolus' as const, units: 3 },
+        { dateYmd: '2026-07-15', timeIso: '2026-07-15T09:00:00.000Z', slotId: 'morning', type: 'basal' as const, units: 1 },
+      ],
+      glucoseEntries: [
+        { dateYmd: '2026-07-15', timeIso: '2026-07-15T10:00:00.000Z', slotId: 'morning', value: 150 },
+      ],
+      noteEntries: [
+        { dateYmd: '2026-07-15', timeIso: '2026-07-15T12:00:00.000Z', slotId: 'afternoon', text: 'restaurado' },
+      ],
+    };
+
+    await store.replaceAll(backup);
+
+    // Verificamos que los datos están restaurados
+    const morningEntries = store.getEntriesFor('2026-07-15', 'morning');
+    expect(morningEntries.length).toBe(2);
+    expect(morningEntries.some(e => e.type === 'basal')).toBe(true);
+    expect(morningEntries.some(e => e.type === 'bolus')).toBe(true);
+
+    expect(store.getGlucose('2026-07-15', 'morning')).toBe(150);
+    expect(store.getNotesFor('2026-07-15', 'afternoon').length).toBe(1);
+    expect(store.hasProfile()).toBe(true);
+  });
+
+  it('replaceAll: roundtrip con exportAll preserva todos los datos', async () => {
+    const today = toYmdLocal();
+    // Llenamos el store
+    store.toggleBasal('morning');
+    store.addBolus('morning', 2);
+    store.setGlucose('morning', 100);
+    store.addNote('morning', 'nota original');
+
+    // Exportamos
+    const snapshot = store.exportAll();
+
+    // Mutamos el store
+    store.addBolus('morning', 5);
+    store.setGlucose('morning', 999);
+
+    // Restauramos desde el snapshot
+    await store.replaceAll(snapshot);
+
+    // El store debe estar como antes de la mutación
+    expect(store.bolusSum(today, 'morning')).toBe(2); // 1 basal (1 unit) + 1 bolus (2) ... espera, basal cuenta como 1 en bolusSum?
+    // bolusSum solo cuenta 'bolus', no 'basal'. Así que bolusSum = 2.
+    expect(store.bolusSum(today, 'morning')).toBe(2);
+    expect(store.getGlucose(today, 'morning')).toBe(100);
+    expect(store.getNotesFor(today, 'morning').length).toBe(1);
+  });
 });
