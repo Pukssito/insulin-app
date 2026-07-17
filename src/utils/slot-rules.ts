@@ -44,3 +44,4 @@ export function buildSlotsFromBrands(brands: InsulinBrand[]): SlotConfig[] {
 // pueda afectar a tests o a la app. Útil para diffs de PRs futuras.
 // 2026-07-17 — añadida franja "Cena" (18-23h) para PRANDIAL. Antes 2 franjas.
 // 2026-07-17 — configurado CI: branches ['**'] + workflow_dispatch + ruleset de main activa.
+// 2026-07-17 — test de flujo PR: primera branch feature para validar el workflow de squash-merge.
