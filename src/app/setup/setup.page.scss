@@ -1,3 +1,7 @@
+/* ============================================================
+   Estilos existentes (Setup inicial — marcas + backup)
+   ============================================================ */
+
 .setup-header {
   padding: 1.5rem 0.5rem;
   h1 { font-size: 2.2rem; font-weight: 800; margin: 0; color: #fff; }
@@ -62,51 +66,6 @@
   display: none;
 }
 
-.backup-section {
-  margin-top: 2rem;
-  margin-bottom: 6rem;  /* espacio para que el footer fixed no tape los botones */
-  padding: 1.25rem;
-  background: rgba(47, 54, 64, 0.5);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 16px;
-
-  .backup-title {
-    font-size: 1.1rem;
-    font-weight: 700;
-    color: var(--ion-color-primary);
-    margin: 0 0 0.5rem;
-  }
-
-  .backup-help {
-    font-size: 0.85rem;
-    color: #999;
-    margin: 0 0 1rem;
-    line-height: 1.4;
-  }
-
-  .backup-buttons {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-  }
-
-  .backup-btn {
-    --border-radius: 12px;
-    --padding-top: 0.8rem;
-    --padding-bottom: 0.8rem;
-    font-weight: 600;
-    margin: 0;
-    text-transform: none;
-    letter-spacing: 0.2px;
-  }
-
-  .backup-glyph {
-    font-size: 1.2rem;
-    line-height: 1;
-    margin-right: 6px;
-  }
-}
-
 .insulin-card {
   position: relative;
   background: #2f3640;
@@ -157,18 +116,18 @@
       gap: 6px;
       align-items: flex-start;
       margin-bottom: 8px;
-      
-      ion-badge { 
-        font-size: 0.65rem; 
-        text-transform: uppercase; 
+
+      ion-badge {
+        font-size: 0.65rem;
+        text-transform: uppercase;
         padding: 4px 8px;
         border-radius: 6px;
       }
-      
-      span { 
-        font-size: 0.8rem; 
-        color: #999; 
-        text-transform: capitalize; 
+
+      span {
+        font-size: 0.8rem;
+        color: #999;
+        text-transform: capitalize;
       }
     }
 
@@ -180,31 +139,277 @@
   }
 }
 
-.fixed-footer {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  padding: 16px;
-  background: linear-gradient(to top, #222831 80%, transparent 100%);
-  z-index: 10;
+/* ============================================================
+   Wizard: progress + footer + step content
+   ============================================================ */
+
+.wizard-progress {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  padding: 12px 0;
+  background: var(--ion-background-color, #222831);
 }
 
-.save-btn {
-  --border-radius: 16px;
-  --padding-top: 1.2rem;
-  --padding-bottom: 1.2rem;
-  font-weight: 700;
-  margin: 0;
+.progress-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+  transition: all 0.3s ease;
 
-  .arrow-glyph {
-    font-size: 1.2rem;
-    font-weight: 700;
-    line-height: 1;
-    margin-left: 8px;
+  &.dot-active {
+    background: var(--ion-color-primary);
+    transform: scale(1.4);
+  }
+
+  &.dot-done {
+    background: var(--ion-color-primary);
+    opacity: 0.6;
   }
 }
 
-.shadow-btn {
-  box-shadow: 0 8px 24px rgba(var(--ion-color-primary-rgb), 0.3);
+.wizard-step {
+  padding-bottom: 2rem; /* espacio para el footer */
+}
+
+.step-header {
+  padding: 1.5rem 0.5rem 1rem;
+
+  h1 {
+    font-size: 1.6rem;
+    font-weight: 800;
+    margin: 0 0 0.5rem;
+    color: #fff;
+    line-height: 1.2;
+  }
+
+  p {
+    font-size: 0.95rem;
+    margin: 0;
+    opacity: 0.7;
+    line-height: 1.4;
+  }
+}
+
+/* Time picker grande para basales y NPH (un solo dato) */
+.big-time-picker {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 2rem 0;
+  min-height: 280px;
+
+  .single-time {
+    --background: #2f3640;
+    --border-radius: 20px;
+    width: 240px;
+    height: 240px;
+    border-radius: 20px;
+    background: #2f3640;
+
+    /* El reloj interior del ion-datetime es pequeño. Forzamos tamaño. */
+    ::ng-deep .wheel {
+      width: 240px;
+    }
+  }
+}
+
+/* Lista de slots en el paso "review" */
+.slot-review-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 1rem 0 1.5rem;
+}
+
+.slot-review-row {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  background: #2f3640;
+  border-radius: 14px;
+  cursor: pointer;
+  transition: transform 0.15s ease, background 0.15s ease;
+
+  &:active {
+    transform: scale(0.98);
+  }
+
+  &.slot-basal {
+    cursor: default;
+    opacity: 0.85;
+  }
+
+  .slot-review-label {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #fff;
+  }
+
+  .slot-review-time {
+    font-size: 0.95rem;
+    color: var(--ion-color-primary);
+    font-variant-numeric: tabular-nums;
+    font-weight: 600;
+  }
+
+  .slot-review-edit {
+    font-size: 1.2rem;
+    color: rgba(255, 255, 255, 0.5);
+  }
+
+  .slot-review-locked {
+    font-size: 1rem;
+    opacity: 0.5;
+  }
+}
+
+.review-help {
+  background: rgba(84, 160, 255, 0.1);
+  border-left: 3px solid var(--ion-color-primary);
+  padding: 12px 14px;
+  border-radius: 8px;
+  margin-bottom: 1.5rem;
+
+  p {
+    margin: 0;
+    font-size: 0.85rem;
+    line-height: 1.4;
+    color: #ccc;
+  }
+}
+
+/* Footer del wizard con navegación */
+.wizard-footer {
+  background: var(--ion-background-color, #222831);
+  padding: 12px 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.wizard-progress-label {
+  text-align: center;
+  font-size: 0.75rem;
+  opacity: 0.6;
+  margin-bottom: 8px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.wizard-buttons {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 10px;
+  align-items: stretch;
+}
+
+.wizard-btn-back {
+  --border-radius: 14px;
+  font-weight: 600;
+  text-transform: none;
+  letter-spacing: 0.2px;
+  margin: 0;
+}
+
+.wizard-btn-next {
+  --border-radius: 14px;
+  --padding-top: 1rem;
+  --padding-bottom: 1rem;
+  font-weight: 700;
+  text-transform: none;
+  letter-spacing: 0.2px;
+  margin: 0;
+}
+
+/* ============================================================
+   Modal: editor de slot (prandiales/mix)
+   ============================================================ */
+
+.editor-row {
+  margin-bottom: 1.5rem;
+
+  label {
+    display: block;
+    font-size: 0.85rem;
+    opacity: 0.7;
+    margin-bottom: 8px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .editor-time {
+    --background: #2f3640;
+    --border-radius: 14px;
+    --padding-start: 16px;
+    --padding-end: 16px;
+    width: 100%;
+    border-radius: 14px;
+    background: #2f3640;
+  }
+}
+
+.editor-done {
+  --border-radius: 14px;
+  --padding-top: 1rem;
+  --padding-bottom: 1rem;
+  font-weight: 700;
+  text-transform: none;
+  margin-top: 1rem;
+}
+
+/* ============================================================
+   Backup section (estilos previos, reubicados al paso final)
+   ============================================================ */
+
+.backup-section {
+  margin-top: 2rem;
+  margin-bottom: 1rem;
+  padding: 1.25rem;
+  background: rgba(47, 54, 64, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+
+  .backup-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--ion-color-primary);
+    margin: 0 0 0.5rem;
+  }
+
+  .backup-help {
+    font-size: 0.85rem;
+    color: #999;
+    margin: 0 0 1rem;
+    line-height: 1.4;
+  }
+
+  .backup-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .backup-btn {
+    --border-radius: 12px;
+    --padding-top: 0.8rem;
+    --padding-bottom: 0.8rem;
+    font-weight: 600;
+    margin: 0;
+    text-transform: none;
+    letter-spacing: 0.2px;
+  }
+
+  .backup-glyph {
+    font-size: 1.2rem;
+    line-height: 1;
+    margin-right: 6px;
+  }
+}
+
+/* Compatibilidad con versiones previas (si queda algo con .fixed-footer) */
+.fixed-footer {
+  display: none; /* ya no se usa; el footer ahora es un ion-footer */
 }
