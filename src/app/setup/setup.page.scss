@@ -357,7 +357,12 @@
   --padding-bottom: 1rem;
   font-weight: 700;
   text-transform: none;
-  margin-top: 1rem;
+}
+
+.editor-footer {
+  background: var(--ion-background-color, #222831);
+  padding: 12px 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 /* ============================================================

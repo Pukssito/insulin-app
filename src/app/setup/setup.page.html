@@ -199,15 +199,23 @@
 
 <!-- ============================================================
      MODAL: Editor de slot (solo para prandiales/mix)
+     Modal a pantalla completa (sin breakpoints) por dos razones:
+     1. Los breakpoints en Ion-Modal obligan a drag para ver el
+        contenido, lo cual es confuso para personas mayores y deja
+        el botón "Hecho" inaccesible si hay un solo breakpoint.
+     2. Los time pickers de hora son altos (~240px cada uno), y
+        con un sheet al 55% no caben dos + el botón.
      ============================================================ -->
 <ion-modal [isOpen]="editingSlot !== null"
-           (didDismiss)="closeSlotEditor()"
-           [breakpoints]="[0.55]"
-           [initialBreakpoint]="0.55"
-           handleBehavior="cycle">
+           (didDismiss)="closeSlotEditor()">
   <ng-template>
     <ion-header class="ion-no-border">
       <ion-toolbar>
+        <ion-buttons slot="start">
+          <ion-button (click)="closeSlotEditor()" fill="clear">
+            Cancelar
+          </ion-button>
+        </ion-buttons>
         <ion-title>{{ editingSlot?.label }}</ion-title>
       </ion-toolbar>
     </ion-header>
@@ -228,9 +236,11 @@
                       (ngModelChange)="editingEndMin = isoToMin($event)"
                       class="editor-time"></ion-datetime>
       </div>
+    </ion-content>
+    <ion-footer class="ion-no-border editor-footer">
       <ion-button expand="block" (click)="saveSlotEdit()" class="editor-done">
         Hecho
       </ion-button>
-    </ion-content>
+    </ion-footer>
   </ng-template>
 </ion-modal>
