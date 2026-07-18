@@ -30,14 +30,18 @@ export function buildSlotsFromBrands(
 
   // BASAL PROLONGADA: una dosis/día. El default es de noche (22-23h),
   // pero el usuario lo cambia en el Setup si se la pone a otra hora.
+  // El label es neutro ("Basal") para que no diga "noche" si el usuario
+  // la pone de día. El rango horario al lado ya da el contexto.
   if (has(b => b.class === 'basal' && b.speed === 'prolongada')) {
-    slots.push({ id:'basal_night', label:'Basal noche', startMin:18*60, endMin:24*60-1, kind:'basal' });
+    slots.push({ id:'basal_night', label:'Basal', startMin:18*60, endMin:24*60-1, kind:'basal' });
   }
 
-  // BASAL INTERMEDIA (NPH): típicamente 2 dosis (mañana y noche)
+  // BASAL INTERMEDIA (NPH): típicamente 2 dosis. Labels neutros
+  // ("NPH 1" / "NPH 2") para que no digan "mañana"/"noche" si el
+  // usuario las cambia de hora. El rango al lado da el contexto.
   if (has(b => b.class === 'basal' && b.speed === 'intermedia')) {
-    slots.push({ id:'nph_morning', label:'NPH mañana', startMin:6*60, endMin:12*60, kind:'basal' });
-    slots.push({ id:'nph_night',   label:'NPH noche',  startMin:18*60, endMin:24*60-1, kind:'basal' });
+    slots.push({ id:'nph_morning', label:'NPH 1', startMin:6*60, endMin:12*60, kind:'basal' });
+    slots.push({ id:'nph_night',   label:'NPH 2', startMin:18*60, endMin:24*60-1, kind:'basal' });
   }
 
   // MEZCLAS: dos tomas (desayuno/comida)

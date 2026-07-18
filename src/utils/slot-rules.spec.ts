@@ -40,7 +40,7 @@ describe('buildSlotsFromBrands', () => {
     expect(slots).toHaveLength(1);
     expect(slots[0]).toMatchObject({
       id: 'basal_night',
-      label: 'Basal noche',
+      label: 'Basal',
       kind: 'basal',
       startMin: 18 * 60,
       endMin: 24 * 60 - 1,
@@ -110,7 +110,7 @@ describe('buildSlotsFromBrands con slotOverrides', () => {
       kind: 'basal',
     });
     // El label por defecto se mantiene si no se sobreescribe
-    expect(slots[0].label).toBe('Basal noche');
+    expect(slots[0].label).toBe('Basal');
   });
 
   it('BASAL prolongada: label custom sustituye al por defecto', () => {
