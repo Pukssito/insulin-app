@@ -12,22 +12,42 @@ import { formatRange } from '../../../utils/date-utils';
 //  Identidad visual: icono del slot
 // ============================================================
 
-/** Patrones RegExp en orden de prioridad para mapear slot.id → emoji. */
+/** Icono para slots de tipo basal: cronómetro (momento del día, no comida). */
+const BASAL_ICON = '⏱';
+
+/** Icono por defecto si un slot de comida no matchea ningún patrón. */
+const DEFAULT_ICON = '◌';
+
+/**
+ * Patrones RegExp en orden de prioridad para mapear slot.id → emoji.
+ * Solo se aplican a slots con comida (bolus/mix). Los slots de tipo
+ * `basal` se tratan aparte: como el usuario puede configurarlos a
+ * cualquier hora del día (no solo de noche), el icono debe ser neutro
+ * y NO asumir un momento concreto.
+ */
 const ICON_PATTERNS: ReadonlyArray<readonly [RegExp, string]> = [
   [/morning/i,    '☀'],
   [/afternoon/i,  '⛅'],
   [/night|evening/i, '☾'],
 ];
 
-const DEFAULT_ICON = '⏱';
-
 /**
- * Devuelve el emoji representativo de una franja en función de su id.
- * Si ningún patrón matchea, devuelve el icono genérico ⏱.
+ * Devuelve el emoji representativo de una franja.
+ *
+ * - Slots de tipo `basal` → `⏱` (cronómetro). El usuario puede
+ *   configurarlos a cualquier hora, así que no asumimos sol ni luna.
+ * - Slots con comida (bolus/mix) → se mapean por id (morning/afternoon/evening).
+ * - Si no hay match → `◌` (icono neutro).
  */
-export function iconForSlot(slotId: string): string {
+export function iconForSlot(slot: SlotConfig): string {
+  // Las basales ahora son configurables: la madre puede ponerse la
+  // suya a las 10:00 (de día) y la tía a las 22:00 (de noche). El
+  // icono de luna era engañoso porque el id seguía siendo 'basal_night'
+  // aunque la hora real fuese diurna. Cronómetro = "momento del día".
+  if (slot.kind === 'basal') return BASAL_ICON;
+
   for (const [pattern, icon] of ICON_PATTERNS) {
-    if (pattern.test(slotId)) return icon;
+    if (pattern.test(slot.id)) return icon;
   }
   return DEFAULT_ICON;
 }

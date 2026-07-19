@@ -21,20 +21,30 @@ const slot = (overrides: Partial<SlotConfig> = {}): SlotConfig => ({
 
 describe('iconForSlot', () => {
   it.each([
-    ['morning',          '☀'],
-    ['MORNING',          '☀'],  // case-insensitive
-    ['morning_basal',    '☀'],
-    ['afternoon',        '⛅'],
-    ['afternoon_extra',  '⛅'],
-    ['night',            '☾'],
-    ['evening',          '☾'],
-    ['nph_night',        '☾'],
-  ])('iconForSlot(%j) === %j', (id, expected) => {
-    expect(iconForSlot(id)).toBe(expected);
+    [{ id: 'morning',         kind: 'bolus' }, '☀'],
+    [{ id: 'MORNING',         kind: 'bolus' }, '☀'],  // case-insensitive
+    [{ id: 'morning_extra',   kind: 'bolus' }, '☀'],
+    [{ id: 'afternoon',       kind: 'bolus' }, '⛅'],
+    [{ id: 'afternoon_extra', kind: 'bolus' }, '⛅'],
+    [{ id: 'evening',         kind: 'bolus' }, '☾'],
+  ])('iconForSlot(%j) === %j', (cfg, expected) => {
+    expect(iconForSlot(slot(cfg))).toBe(expected);
   });
 
-  it('devuelve el icono por defecto si no matchea ningún patrón', () => {
-    expect(iconForSlot('lunch_random_123')).toBe('⏱');
+  it('BASAL: devuelve ⏱ (cronómetro), independientemente del id', () => {
+    // Aunque el id sea 'basal_night', el icono ya no es la luna
+    // porque el usuario puede configurar la basal a cualquier hora.
+    expect(iconForSlot(slot({ id: 'basal_night', kind: 'basal' }))).toBe('⏱');
+    expect(iconForSlot(slot({ id: 'nph_morning',  kind: 'basal' }))).toBe('⏱');
+    expect(iconForSlot(slot({ id: 'nph_night',    kind: 'basal' }))).toBe('⏱');
+  });
+
+  it('kind="both" con id nocturno: usa el icono de luna (sigue siendo comida)', () => {
+    expect(iconForSlot(slot({ id: 'evening', kind: 'both' }))).toBe('☾');
+  });
+
+  it('devuelve el icono neutro ◌ si no matchea ningún patrón', () => {
+    expect(iconForSlot(slot({ id: 'lunch_random_123', kind: 'bolus' }))).toBe('◌');
   });
 });
 

@@ -4,9 +4,9 @@ import { toYmdLocal, minutesNowLocal } from '../utils/date-utils';
 import { Preferences } from '@capacitor/preferences';
 
 import { INSULIN_CATALOG } from './insulin-catalog';
-import { InsulinProfile } from '../models/profile';
+import { InsulinProfile, SlotOverride } from '../models/profile';
 import { InsulinBrand } from '../models/insulin';
-import { buildSlotsFromBrands } from '../utils/slot-rules';
+import { buildSlotsFromBrands, validateSlotOverrides } from '../utils/slot-rules';
 
 const ENTRIES_KEY = 'insulin_entries_v1';
 const GLUCOSE_KEY = 'glucose_entries_v1';
@@ -84,8 +84,27 @@ export class InsulinStore {
   getCatalog(): InsulinBrand[] { return INSULIN_CATALOG; }
   hasProfile(): boolean { return !!this._profile()?.brandIds?.length; }
 
-  async setProfileByIds(brandIds: string[]) {
-    this._profile.set({ brandIds });
+  /**
+   * Persiste el perfil del usuario (marcas elegidas + overrides de horarios)
+   * y re-deriva los slots a partir de las marcas + los overrides.
+   *
+   * Valida los overrides antes de persistir: si algo no cuadra, lanza
+   * Error y NO toca storage ni signals. Esto evita que un backup corrupto
+   * o un input manipulado rompa la UI.
+   *
+   * @param brandIds IDs de las marcas elegidas (puede ser [] para vaciar)
+   * @param slotOverrides Overrides opcionales por slotId. Si no se pasan
+   *   (o se pasa undefined), el profile queda sin overrides.
+   */
+  async setProfileByIds(brandIds: string[], slotOverrides?: Record<string, SlotOverride>) {
+    const brands = INSULIN_CATALOG.filter(b => brandIds.includes(b.id));
+
+    // Validamos los overrides CONTRA los slots por defecto (sin overrides),
+    // porque validateSlotOverrides necesita los defaults como referencia.
+    const defaultSlots = buildSlotsFromBrands(brands);
+    validateSlotOverrides(slotOverrides, defaultSlots);
+
+    this._profile.set({ brandIds, slotOverrides });
     await Preferences.set({ key: PROFILE_KEY, value: JSON.stringify(this._profile()) });
     this.applyProfileToSlots();
   }
@@ -94,7 +113,7 @@ export class InsulinStore {
     const profile = this._profile();
     if (!profile) return;
     const brands = INSULIN_CATALOG.filter(b => profile.brandIds.includes(b.id));
-    this._slots.set(buildSlotsFromBrands(brands));
+    this._slots.set(buildSlotsFromBrands(brands, profile.slotOverrides));
   }
 
   /* =======================

@@ -199,5 +199,23 @@ ion-card-title {
   border-radius: 12px;
 }
 
+/* Dark theme global para CUALQUIER ion-datetime de la app.
+   La app usa tema oscuro siempre, así que aplicamos las mismas custom
+   properties a nivel global en vez de repetirlas en cada componente.
+   Esto cubre el popover del time-picker-popover (compatible con el
+   bloque específico de arriba) y los nuevos ion-datetime del wizard
+   de Setup (basal, NPH, editor de slot en el modal).
+
+   Sin este bloque, los nuevos ion-datetime del wizard se ven con
+   el degradado blanco por defecto de Ionic 7. */
+ion-datetime {
+  --background: #2f3640;
+  --background-rgb: 47, 54, 64;
+  --title-color: #eeeeee;
+  --wheel-highlight-background: rgba(77, 182, 172, 0.25);
+  --wheel-highlight-border-radius: 12px;
+  --wheel-fade-background-rgb: 47, 54, 64;
+}
+
 
 

@@ -110,7 +110,7 @@ export class SlotCardComponent {
   }
 
   get icon(): string {
-    return iconForSlot(this.slot().id);
+    return iconForSlot(this.slot());
   }
 
   glucoseClass(value: number | null): string {

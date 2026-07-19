@@ -592,4 +592,90 @@ describe('InsulinStore', () => {
     expect(store.getGlucose(today, 'morning')).toBe(100);
     expect(store.getNotesFor(today, 'morning').length).toBe(1);
   });
+
+  /* ============================================================
+   *  19. setProfileByIds con slotOverrides
+   * ============================================================ */
+  it('setProfileByIds: persiste el profile SIN slotOverrides cuando no se pasan', async () => {
+    await store.setProfileByIds(['fiasp-pen']);
+    const profile = store.profile();
+    expect(profile).not.toBeNull();
+    expect(profile!.brandIds).toEqual(['fiasp-pen']);
+    expect(profile!.slotOverrides).toBeUndefined();
+  });
+
+  it('setProfileByIds: aplica slotOverrides de basal sobre los slots por defecto', async () => {
+    await store.setProfileByIds(['lantus-vial'], {
+      basal_night: { timeMin: 8 * 60 }, // la madre se la pone a las 8:00
+    });
+
+    // El slot basal_night debe haber pasado de 18-23:59 a 8:00-9:00
+    const basalSlot = store.slots().find(s => s.id === 'basal_night')!;
+    expect(basalSlot).toBeDefined();
+    expect(basalSlot.startMin).toBe(8 * 60);
+    expect(basalSlot.endMin).toBe(9 * 60);
+  });
+
+  it('setProfileByIds: aplica overrides de NPH en ambas franjas', async () => {
+    await store.setProfileByIds(['insulatard-vial'], {
+      nph_morning: { timeMin: 8 * 60 },
+      nph_night: { timeMin: 22 * 60 },
+    });
+
+    const morning = store.slots().find(s => s.id === 'nph_morning')!;
+    const night = store.slots().find(s => s.id === 'nph_night')!;
+    expect(morning.startMin).toBe(8 * 60);
+    expect(morning.endMin).toBe(9 * 60);
+    expect(night.startMin).toBe(22 * 60);
+    expect(night.endMin).toBe(23 * 60);
+  });
+
+  it('setProfileByIds: lanza error si el override referencia un slotId inexistente', async () => {
+    await expect(
+      store.setProfileByIds(['fiasp-pen'], {
+        slot_inexistente: { timeMin: 8 * 60 },
+      }),
+    ).rejects.toThrow(/slot_inexistente/);
+  });
+
+  it('setProfileByIds: lanza error si el override de basal no tiene timeMin', async () => {
+    await expect(
+      store.setProfileByIds(['lantus-vial'], {
+        // @ts-expect-error -故意的, queremos forzar el error de validación
+        basal_night: { startMin: 8 * 60, endMin: 9 * 60 },
+      }),
+    ).rejects.toThrow(/requiere timeMin/);
+  });
+
+  it('setProfileByIds: los slotOverrides del profile viejo NO contaminan al nuevo', async () => {
+    // Primera config: con override de basal
+    await store.setProfileByIds(['lantus-vial'], {
+      basal_night: { timeMin: 8 * 60 },
+    });
+    expect(store.slots().find(s => s.id === 'basal_night')!.startMin).toBe(8 * 60);
+
+    // Segunda config: SIN override. La basal debe volver al default (18:00)
+    await store.setProfileByIds(['lantus-vial']);
+
+    const basal = store.slots().find(s => s.id === 'basal_night')!;
+    expect(basal.startMin).toBe(18 * 60);
+  });
+
+  it('loadFromStorage: rehidrata los slotOverrides desde Preferences', async () => {
+    // Persistimos un profile con override
+    await store.setProfileByIds(['lantus-vial'], {
+      basal_night: { timeMin: 8 * 60, label: 'Lantus mañana' },
+    });
+
+    // Simulamos un reinicio: creamos un store nuevo que lee de Preferences
+    TestBed.resetTestingModule();
+    TestBed.configureTestingModule({});
+    const fresh = TestBed.inject(InsulinStore);
+    await flushMicrotasks();
+
+    const basal = fresh.slots().find(s => s.id === 'basal_night')!;
+    expect(basal.startMin).toBe(8 * 60);
+    expect(basal.endMin).toBe(9 * 60);
+    expect(basal.label).toBe('Lantus mañana');
+  });
 });

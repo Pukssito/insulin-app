@@ -1,7 +1,16 @@
 <ion-header class="ion-no-border">
   <ion-toolbar mode="ios">
-    <ion-title>Tu Insulina</ion-title>
+    <ion-title>Configuración</ion-title>
   </ion-toolbar>
+
+  <!-- Indicador de progreso del wizard -->
+  <div class="wizard-progress" aria-label="Progreso del wizard">
+    <span *ngFor="let s of steps; let i = index"
+          [class.dot-active]="i === currentStepIndex"
+          [class.dot-done]="i < currentStepIndex"
+          class="progress-dot"
+          [attr.aria-current]="i === currentStepIndex ? 'step' : null"></span>
+  </div>
 </ion-header>
 
 <ion-content class="ion-padding">
@@ -12,80 +21,226 @@
          (change)="onFileSelected($event)"
          class="hidden-file-input" />
 
-  <div class="setup-header">
-    <h1>Configuración</h1>
-    <p>Selecciona las marcas de insulina que utilizas habitualmente.</p>
-  </div>
+  <ng-container [ngSwitch]="step">
 
-  <ion-segment [(ngModel)]="tab" mode="ios" class="custom-segment">
-    <ion-segment-button value="pen" layout="icon-top">
-      <span class="seg-glyph">✎</span>
-      <ion-label>Plumas</ion-label>
-    </ion-segment-button>
-    <ion-segment-button value="vial" layout="icon-top">
-      <span class="seg-glyph">⚗</span>
-      <ion-label>Viales</ion-label>
-    </ion-segment-button>
-  </ion-segment>
-
-  <ion-searchbar [(ngModel)]="q" 
-                 placeholder="Buscar marca..." 
-                 mode="ios" 
-                 class="custom-searchbar"></ion-searchbar>
-
-  <div class="insulin-grid">
-    <div *ngFor="let b of listForTab()"
-         [class]="'insulin-card ' + b.class"
-         [ngClass]="{'is-selected': selected.has(b.id)}"
-         (click)="toggle(b.id)">
-
-      <div class="card-selection-indicator">
-        <span class="sel-glyph">{{ selected.has(b.id) ? '✓' : '＋' }}</span>
+    <!-- ============================================================
+         PASO 1: Marcas de insulina
+         ============================================================ -->
+    <div *ngSwitchCase="'brands'" class="wizard-step">
+      <div class="step-header">
+        <h1>¿Qué insulinas usas?</h1>
+        <p>Selecciona las que utilizas habitualmente. Luego configuraremos los horarios.</p>
       </div>
 
-      <div class="card-body">
-        <div class="brand-name">{{ b.tradeName }}</div>
-        <div class="brand-info">
-          <ion-badge slot="start">{{ b.class }}</ion-badge>
-          <span>{{ b.speed }}</span>
+      <ion-segment [(ngModel)]="tab" mode="ios" class="custom-segment">
+        <ion-segment-button value="pen" layout="icon-top">
+          <span class="seg-glyph">✎</span>
+          <ion-label>Plumas</ion-label>
+        </ion-segment-button>
+        <ion-segment-button value="vial" layout="icon-top">
+          <span class="seg-glyph">⚗</span>
+          <ion-label>Viales</ion-label>
+        </ion-segment-button>
+      </ion-segment>
+
+      <ion-searchbar [(ngModel)]="q"
+                     placeholder="Buscar marca..."
+                     mode="ios"
+                     class="custom-searchbar"></ion-searchbar>
+
+      <div class="insulin-grid">
+        <div *ngFor="let b of listForTab()"
+             [class]="'insulin-card ' + b.class"
+             [ngClass]="{'is-selected': selected.has(b.id)}"
+             (click)="toggle(b.id)">
+
+          <div class="card-selection-indicator">
+            <span class="sel-glyph">{{ selected.has(b.id) ? '✓' : '＋' }}</span>
+          </div>
+
+          <div class="card-body">
+            <div class="brand-name">{{ b.tradeName }}</div>
+            <div class="brand-info">
+              <ion-badge slot="start">{{ b.class }}</ion-badge>
+              <span>{{ b.speed }}</span>
+            </div>
+            <div class="brand-notes" *ngIf="b.notes">{{ b.notes }}</div>
+          </div>
         </div>
-        <div class="brand-notes" *ngIf="b.notes">{{ b.notes }}</div>
       </div>
     </div>
-  </div>
 
-  <!-- Sección de copia de seguridad -->
-  <div class="backup-section">
-    <h2 class="backup-title">Copia de seguridad</h2>
-    <p class="backup-help">
-      Guarda tus datos en un archivo para poder recuperarlos si pierdes o cambias de móvil.
-    </p>
-    <div class="backup-buttons">
-      <ion-button expand="block"
-                  fill="outline"
-                  (click)="onExportData()"
-                  class="backup-btn">
-        <span class="backup-glyph" slot="start">↗</span>
-        Exportar datos
-      </ion-button>
-      <ion-button expand="block"
-                  fill="outline"
-                  color="medium"
-                  (click)="onImportDataClick()"
-                  class="backup-btn">
-        <span class="backup-glyph" slot="start">↙</span>
-        Importar datos
-      </ion-button>
+    <!-- ============================================================
+         PASO 2: Hora de la basal prolongada
+         ============================================================ -->
+    <div *ngSwitchCase="'basal'" class="wizard-step">
+      <div class="step-header">
+        <h1>¿A qué hora te pones la insulina basal?</h1>
+        <p>Si te la pones todos los días a la misma hora, pon esa. Luego podrás cambiarlo.</p>
+      </div>
+
+      <div class="big-time-picker">
+        <ion-datetime presentation="time"
+                      format="HH:mm"
+                      [(ngModel)]="basalTime"
+                      size="cover"
+                      class="single-time"></ion-datetime>
+      </div>
     </div>
-  </div>
 
-  <div class="fixed-footer">
+    <!-- ============================================================
+         PASO 3a: NPH de la mañana
+         ============================================================ -->
+    <div *ngSwitchCase="'nph-morning'" class="wizard-step">
+      <div class="step-header">
+        <h1>¿A qué hora te pones la NPH de la mañana?</h1>
+        <p>La NPH suele ponerse dos veces al día. Empezamos por la de la mañana.</p>
+      </div>
+
+      <div class="big-time-picker">
+        <ion-datetime presentation="time"
+                      format="HH:mm"
+                      [(ngModel)]="nphMorning"
+                      size="cover"
+                      class="single-time"></ion-datetime>
+      </div>
+    </div>
+
+    <!-- ============================================================
+         PASO 3b: NPH de la noche
+         ============================================================ -->
+    <div *ngSwitchCase="'nph-night'" class="wizard-step">
+      <div class="step-header">
+        <h1>¿Y la NPH de la noche?</h1>
+        <p>Última pregunta sobre horarios.</p>
+      </div>
+
+      <div class="big-time-picker">
+        <ion-datetime presentation="time"
+                      format="HH:mm"
+                      [(ngModel)]="nphNight"
+                      size="cover"
+                      class="single-time"></ion-datetime>
+      </div>
+    </div>
+
+    <!-- ============================================================
+         PASO FINAL: Revisión de horarios + backup
+         ============================================================ -->
+    <div *ngSwitchCase="'review'" class="wizard-step">
+      <div class="step-header">
+        <h1>Revisa tus horarios</h1>
+        <p>Toca cualquier horario para cambiarlo si en tu casa se come o se pone la insulina a otra hora.</p>
+      </div>
+
+      <div class="slot-review-list">
+        <div *ngFor="let s of previewSlots()"
+             class="slot-review-row"
+             [class.slot-basal]="s.kind === 'basal'"
+             (click)="openSlotEditor(s)">
+          <div class="slot-review-label">{{ s.label }}</div>
+          <div class="slot-review-time">{{ formatSlotTime(s) }}</div>
+          <div class="slot-review-edit" *ngIf="s.kind !== 'basal'">✎</div>
+          <div class="slot-review-locked" *ngIf="s.kind === 'basal'">🔒</div>
+        </div>
+      </div>
+
+      <div class="review-help" *ngIf="hasBasalProlonged || hasNph">
+        <p>💡 Los horarios de las basales (con 🔒) se cambian en los pasos anteriores. Pulsa "Atrás" para modificarlos.</p>
+      </div>
+
+      <!-- Sección de copia de seguridad -->
+      <div class="backup-section">
+        <h2 class="backup-title">Copia de seguridad</h2>
+        <p class="backup-help">
+          Guarda tus datos en un archivo para poder recuperarlos si pierdes o cambias de móvil.
+        </p>
+        <div class="backup-buttons">
+          <ion-button expand="block"
+                      fill="outline"
+                      (click)="onExportData()"
+                      class="backup-btn">
+            <span class="backup-glyph" slot="start">↗</span>
+            Exportar datos
+          </ion-button>
+          <ion-button expand="block"
+                      fill="outline"
+                      color="medium"
+                      (click)="onImportDataClick()"
+                      class="backup-btn">
+            <span class="backup-glyph" slot="start">↙</span>
+            Importar datos
+          </ion-button>
+        </div>
+      </div>
+    </div>
+
+  </ng-container>
+</ion-content>
+
+<!-- Footer fijo con navegación del wizard -->
+<ion-footer class="ion-no-border wizard-footer">
+  <div class="wizard-progress-label">{{ progressLabel }}</div>
+  <div class="wizard-buttons">
+    <ion-button fill="outline"
+                [disabled]="isFirstStep"
+                (click)="prev()"
+                class="wizard-btn-back">
+      ← Atrás
+    </ion-button>
     <ion-button expand="block"
-                [disabled]="selected.size===0"
-                (click)="save()"
-                class="save-btn shadow-btn">
-      Guardar y continuar
-      <span class="arrow-glyph" slot="end">→</span>
+                [disabled]="isFirstStep && selected.size === 0"
+                (click)="next()"
+                class="wizard-btn-next">
+      {{ isLastStep ? 'Empezar ✓' : 'Siguiente →' }}
     </ion-button>
   </div>
-</ion-content>
+</ion-footer>
+
+<!-- ============================================================
+     MODAL: Editor de slot (solo para prandiales/mix)
+     Modal a pantalla completa (sin breakpoints) por dos razones:
+     1. Los breakpoints en Ion-Modal obligan a drag para ver el
+        contenido, lo cual es confuso para personas mayores y deja
+        el botón "Hecho" inaccesible si hay un solo breakpoint.
+     2. Los time pickers de hora son altos (~240px cada uno), y
+        con un sheet al 55% no caben dos + el botón.
+     ============================================================ -->
+<ion-modal [isOpen]="editingSlot !== null"
+           (didDismiss)="closeSlotEditor()">
+  <ng-template>
+    <ion-header class="ion-no-border">
+      <ion-toolbar>
+        <ion-buttons slot="start">
+          <ion-button (click)="closeSlotEditor()" fill="clear">
+            Cancelar
+          </ion-button>
+        </ion-buttons>
+        <ion-title>{{ editingSlot?.label }}</ion-title>
+      </ion-toolbar>
+    </ion-header>
+    <ion-content class="ion-padding">
+      <div class="editor-row">
+        <label>Desde las</label>
+        <ion-datetime presentation="time"
+                      format="HH:mm"
+                      [ngModel]="minToIso(editingStartMin)"
+                      (ngModelChange)="editingStartMin = isoToMin($event)"
+                      class="editor-time"></ion-datetime>
+      </div>
+      <div class="editor-row">
+        <label>Hasta las</label>
+        <ion-datetime presentation="time"
+                      format="HH:mm"
+                      [ngModel]="minToIso(editingEndMin)"
+                      (ngModelChange)="editingEndMin = isoToMin($event)"
+                      class="editor-time"></ion-datetime>
+      </div>
+    </ion-content>
+    <ion-footer class="ion-no-border editor-footer">
+      <ion-button expand="block" (click)="saveSlotEdit()" class="editor-done">
+        Hecho
+      </ion-button>
+    </ion-footer>
+  </ng-template>
+</ion-modal>
