@@ -25,7 +25,7 @@ describe('buildSlotsFromBrands', () => {
     // Cena cubre 18-23 (estándar España: cenar 21-22h)
     expect(slots[2]).toMatchObject({
       id: 'evening',
-      label: 'Cena',
+      label: 'Noche',
       startMin: 18 * 60,
       endMin: 23 * 60,
       kind: 'bolus',

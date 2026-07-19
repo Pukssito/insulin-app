@@ -20,12 +20,15 @@ export function buildSlotsFromBrands(
   const slots: SlotConfig[] = [];
 
   // PRANDIAL: ultrarrápida/rápida => bolus en comidas principales
-  // (desayuno, comida, cena). España: cena entre 21-22h, así que el slot
-  // cubre 18-23h para dar margen antes y después.
+  // (desayuno, comida, cena). Las etiquetas describen la franja
+  // horaria: "Mañana" / "Tarde" / "Noche". El usuario puede
+  // renombrar "Noche" si lo prefiere (ej. "Cena" si en su casa cenan
+  // a las 21h) — pero el id interno 'evening' se mantiene por
+  // retrocompatibilidad con los datos ya guardados en la app.
   if (has(b => b.class === 'prandial')) {
     slots.push({ id:'morning',   label:'Mañana', startMin: 6*60, endMin:12*60, kind:'bolus' });
     slots.push({ id:'afternoon', label:'Tarde',  startMin:12*60, endMin:18*60, kind:'bolus' });
-    slots.push({ id:'evening',   label:'Cena',   startMin:18*60, endMin:23*60, kind:'bolus' });
+    slots.push({ id:'evening',   label:'Noche',  startMin:18*60, endMin:23*60, kind:'bolus' });
   }
 
   // BASAL PROLONGADA: una dosis/día. El default es de noche (22-23h),
