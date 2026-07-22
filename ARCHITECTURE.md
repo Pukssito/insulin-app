@@ -45,7 +45,7 @@ El antiguo `InsulinService` (368 líneas, 7 responsabilidades) se dividió en tr
 
 - Mantiene los signals con los datos: `entries`, `glucoseEntries`, `noteEntries`, `profile`, `slots`, `today`, `nowMin`.
 - Expone queries (`getEntriesFor`, `getGlucose`, `getHistoryDays`, …).
-- Expone mutaciones (`toggleBasal`, `addBolus`, `setGlucose`, `addNote`, `resetSlotToday`, `resetAllToday`, `undoLast`).
+- Expone mutaciones (`toggleBasal`, `addBolus`, `setGlucose`, `addNote`, `resetSlotToday`, `resetAllToday`).
 - En su constructor: `loadFromStorage()` (lee Capacitor Preferences) y `setInterval(tick, 60_000)` (actualiza `today` y `nowMin`).
 - **No** calcula resúmenes. **No** programa notificaciones. **No** conoce `DaySummary` ni `Notifications`.
 
