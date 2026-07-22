@@ -229,27 +229,7 @@ describe('InsulinStore', () => {
   });
 
   /* ============================================================
-   *  9. undoLast — borra la última entrada del slot correcto
-   * ============================================================ */
-  it('undoLast: con slotId borra la última entrada de ese slot; sin slotId borra la última global del día', () => {
-    const today = toYmdLocal();
-
-    store.addBolus('morning', 1);
-    store.addBolus('morning', 2);
-    store.addBolus('afternoon', 5);
-
-    // Con slotId: solo borra la del slot
-    store.undoLast('morning');
-    expect(store.bolusSum(today, 'morning')).toBe(1);
-    expect(store.bolusSum(today, 'afternoon')).toBe(5);
-
-    // Sin slotId: borra la última del día (la de afternoon)
-    store.undoLast();
-    expect(store.bolusSum(today, 'afternoon')).toBe(0);
-  });
-
-  /* ============================================================
-   *  10. getGlucose — devuelve la más reciente si hay varias
+   *  9. getGlucose — devuelve la más reciente si hay varias
    * ============================================================ */
   it('getGlucose: cuando hay varias lecturas para el mismo slot, devuelve la más reciente', () => {
     const today = toYmdLocal();
@@ -266,7 +246,7 @@ describe('InsulinStore', () => {
   });
 
   /* ============================================================
-   *  11. timeIso opcional — permite registrar dosis pasadas
+   *  10. timeIso opcional — permite registrar dosis pasadas
    * ============================================================ */
   it('addBolus: acepta un timeIso personalizado para registrar dosis pasadas', () => {
     const today = toYmdLocal();
@@ -308,7 +288,7 @@ describe('InsulinStore', () => {
   });
 
   /* ============================================================
-   *  12. updateBasalTime / updateLastBolusTime — edición
+   *  11. updateBasalTime — edición de hora de basal
    * ============================================================ */
   it('updateBasalTime: cambia el timeIso de la basal del slot', () => {
     const today = toYmdLocal();
@@ -336,44 +316,8 @@ describe('InsulinStore', () => {
     expect(store.getEntriesFor(today, 'morning')).toEqual([]);
   });
 
-  it('updateLastBolusTime: cambia el timeIso del ÚLTIMO bolus del slot', () => {
-    const today = toYmdLocal();
-    store.addBolus('morning', 1, '2026-07-16T08:00:00.000Z');
-    store.addBolus('morning', 2, '2026-07-16T09:00:00.000Z');
-    expect(store.bolusSum(today, 'morning')).toBe(3);
-
-    const newTime = '2026-07-16T09:30:00.000Z';
-    store.updateLastBolusTime('morning', newTime);
-
-    // El más reciente ahora tiene la nueva hora
-    expect(store.getLastEntryTime(today, 'morning', 'bolus')).toBe(newTime);
-    // El total NO cambia (solo cambiamos la hora, no las unidades)
-    expect(store.bolusSum(today, 'morning')).toBe(3);
-  });
-
-  it('updateLastBolusTime: no afecta a bolus anteriores del mismo slot', () => {
-    const today = toYmdLocal();
-    store.addBolus('morning', 1, '2026-07-16T08:00:00.000Z');
-    store.addBolus('morning', 2, '2026-07-16T09:00:00.000Z');
-
-    store.updateLastBolusTime('morning', '2026-07-16T09:30:00.000Z');
-
-    const entries = store.getEntriesFor(today, 'morning');
-    const bolusEntries = entries.filter(e => e.type === 'bolus');
-    expect(bolusEntries.length).toBe(2);
-    // El primero (08:00) no se tocó
-    expect(bolusEntries[0].timeIso).toBe('2026-07-16T08:00:00.000Z');
-    // El segundo (era 09:00) ahora es 09:30
-    expect(bolusEntries[1].timeIso).toBe('2026-07-16T09:30:00.000Z');
-  });
-
-  it('updateLastBolusTime: no hace nada si no hay bolus registrado', () => {
-    expect(() => store.updateLastBolusTime('morning', '2026-07-16T09:30:00.000Z')).not.toThrow();
-    expect(store.getEntriesFor(toYmdLocal(), 'morning')).toEqual([]);
-  });
-
   /* ============================================================
-   *  13. timeIso? en setGlucose y addNote (consistencia)
+   *  12. timeIso? en setGlucose y addNote (consistencia)
    * ============================================================ */
   it('setGlucose: acepta un timeIso personalizado para registrar glucosas pasadas', () => {
     const today = toYmdLocal();
@@ -393,7 +337,7 @@ describe('InsulinStore', () => {
   });
 
   /* ============================================================
-   *  14. updateBolusTimeByTimestamp — editar un bolus concreto
+   *  13. updateBolusTimeByTimestamp — editar un bolus concreto
    * ============================================================ */
   it('updateBolusTimeByTimestamp: cambia SOLO el bolus con ese timeIso', () => {
     const today = toYmdLocal();
@@ -428,7 +372,7 @@ describe('InsulinStore', () => {
   });
 
   /* ============================================================
-   *  15. updateGlucoseTime y updateLastNoteTime
+   *  14. updateGlucoseTime y updateNoteTimeByTimestamp
    * ============================================================ */
   it('updateGlucoseTime: cambia el timeIso de la glucosa del slot', () => {
     const today = toYmdLocal();
@@ -448,42 +392,59 @@ describe('InsulinStore', () => {
     expect(store.getGlucose(today, 'morning')).toBe(120);
   });
 
-  it('updateLastNoteTime: cambia el timeIso de la ÚLTIMA nota del slot', () => {
+  it('updateNoteTimeByTimestamp: cambia SOLO la nota con ese timeIso', () => {
     const today = toYmdLocal();
     store.addNote('morning', 'primera', '2026-07-16T08:00:00.000Z');
     store.addNote('morning', 'segunda', '2026-07-16T09:00:00.000Z');
+    store.addNote('morning', 'tercera', '2026-07-16T10:00:00.000Z');
 
-    store.updateLastNoteTime('morning', '2026-07-16T09:30:00.000Z');
+    // Editamos SOLO la del medio
+    store.updateNoteTimeByTimestamp('morning', '2026-07-16T09:00:00.000Z', '2026-07-16T09:30:00.000Z');
 
     const notes = store.getNotesFor(today, 'morning');
-    expect(notes.length).toBe(2);
-    expect(notes[0].timeIso).toBe('2026-07-16T08:00:00.000Z'); // primera intacta
-    expect(notes[1].timeIso).toBe('2026-07-16T09:30:00.000Z'); // segunda editada
+    expect(notes.length).toBe(3);
+    expect(notes[0].timeIso).toBe('2026-07-16T08:00:00.000Z'); // intacta
+    expect(notes[1].timeIso).toBe('2026-07-16T09:30:00.000Z'); // editada
+    expect(notes[2].timeIso).toBe('2026-07-16T10:00:00.000Z'); // intacta
+    // El texto no cambia
+    expect(notes[1].text).toBe('segunda');
+  });
+
+  it('updateNoteTimeByTimestamp: no afecta nada si el timeIso no existe', () => {
+    const today = toYmdLocal();
+    store.addNote('morning', 'única', '2026-07-16T08:00:00.000Z');
+
+    // oldTimeIso inexistente pero PASADO (no futuro, para que pase
+    // la validación de "no hora futura" en el store)
+    store.updateNoteTimeByTimestamp('morning', '2025-01-01T00:00:00.000Z', '2026-07-16T09:00:00.000Z');
+
+    const notes = store.getNotesFor(today, 'morning');
+    expect(notes.length).toBe(1);
+    expect(notes[0].timeIso).toBe('2026-07-16T08:00:00.000Z');
   });
 
   /* ============================================================
-   *  16. assertNotFuture — todas las mutaciones rechazan hora futura
+   *  15. assertNotFuture — todas las mutaciones rechazan hora futura
    * ============================================================ */
   it('mutaciones: rechazan timeIso futuro con throw (defensa contra datos incorrectos)', () => {
     const future = new Date(Date.now() + 60 * 60_000).toISOString(); // +1h
 
-    // Las 9 mutaciones que aceptan timeIso deben lanzar
+    // Las 8 mutaciones que aceptan timeIso deben lanzar
     expect(() => store.addBolus('morning', 1, future)).toThrow(/hora futura/);
     expect(() => store.toggleBasal('morning', future)).toThrow(/hora futura/);
     expect(() => store.setGlucose('morning', 100, future)).toThrow(/hora futura/);
     expect(() => store.addNote('morning', 'test', future)).toThrow(/hora futura/);
     expect(() => store.updateBasalTime('morning', future)).toThrow(/hora futura/);
-    expect(() => store.updateLastBolusTime('morning', future)).toThrow(/hora futura/);
     expect(() => store.updateBolusTimeByTimestamp('morning', future, future)).toThrow(/hora futura/);
     expect(() => store.updateGlucoseTime('morning', future)).toThrow(/hora futura/);
-    expect(() => store.updateLastNoteTime('morning', future)).toThrow(/hora futura/);
+    expect(() => store.updateNoteTimeByTimestamp('morning', future, future)).toThrow(/hora futura/);
 
     // Sanity: si no se pasa timeIso, debe seguir funcionando con hora actual
     expect(() => store.toggleBasal('morning')).not.toThrow();
   });
 
   /* ============================================================
-   *  17. exportAll — snapshot del estado para backup
+   *  16. exportAll — snapshot del estado para backup
    * ============================================================ */
   it('exportAll: devuelve snapshot del estado actual', () => {
     const today = toYmdLocal();
@@ -516,7 +477,7 @@ describe('InsulinStore', () => {
   });
 
   /* ============================================================
-   *  18. replaceAll — restaurar desde backup
+   *  17. replaceAll — restaurar desde backup
    * ============================================================ */
   it('replaceAll: reemplaza TODOS los datos (entries, glucose, notes, profile)', async () => {
     const today = toYmdLocal();
@@ -594,7 +555,7 @@ describe('InsulinStore', () => {
   });
 
   /* ============================================================
-   *  19. setProfileByIds con slotOverrides
+   *  18. setProfileByIds con slotOverrides
    * ============================================================ */
   it('setProfileByIds: persiste el profile SIN slotOverrides cuando no se pasan', async () => {
     await store.setProfileByIds(['fiasp-pen']);

@@ -167,14 +167,6 @@ export class InsulinStore {
   /* =======================
    *  API — queries
    * ======================= */
-  currentSlotId(slots: SlotConfig[], d = new Date()): string | null {
-    const m = minutesNowLocal(d);
-    const s = slots.find(s => s.startMin <= s.endMin
-      ? m >= s.startMin && m < s.endMin
-      : (m >= s.startMin || m < s.endMin));
-    return s?.id ?? null;
-  }
-
   getEntriesFor(dateYmd: string, slotId: string): DoseEntry[] {
     return this._entries().filter(e => e.dateYmd === dateYmd && e.slotId === slotId);
   }
@@ -316,23 +308,6 @@ export class InsulinStore {
     this._nowMin.set(minutesNowLocal());
   }
 
-  undoLast(slotId?: string) {
-    const dateYmd = this._today();
-    this._entries.update(entries => {
-      let lastIdx = -1;
-      for (let i = entries.length - 1; i >= 0; i--) {
-        const e = entries[i];
-        if (e.dateYmd === dateYmd && (!slotId || e.slotId === slotId)) {
-          lastIdx = i;
-          break;
-        }
-      }
-      if (lastIdx < 0) return entries;
-      return [...entries.slice(0, lastIdx), ...entries.slice(lastIdx + 1)];
-    });
-    this.saveToStorage();
-  }
-
   /**
    * Cambia el `timeIso` de la basal del slot de hoy.
    * No hace nada si no hay basal registrada.
@@ -349,32 +324,6 @@ export class InsulinStore {
       if (idx < 0) return entries;
       const next = [...entries];
       next[idx] = { ...next[idx], timeIso: newTimeIso };
-      return next;
-    });
-    this.saveToStorage();
-  }
-
-  /**
-   * Cambia el `timeIso` del ÚLTIMO bolus del slot de hoy.
-   * No hace nada si no hay bolus registrado.
-   * Usado por la UI cuando el usuario edita la hora del último
-   * bolus (típicamente "me inyecté hace 1h y olvidé marcarlo").
-   */
-  updateLastBolusTime(slotId: string, newTimeIso: string) {
-    this.assertNotFuture(newTimeIso);
-    const dateYmd = this._today();
-    this._entries.update(entries => {
-      let lastIdx = -1;
-      for (let i = entries.length - 1; i >= 0; i--) {
-        const e = entries[i];
-        if (e.dateYmd === dateYmd && e.slotId === slotId && e.type === 'bolus') {
-          lastIdx = i;
-          break;
-        }
-      }
-      if (lastIdx < 0) return entries;
-      const next = [...entries];
-      next[lastIdx] = { ...next[lastIdx], timeIso: newTimeIso };
       return next;
     });
     this.saveToStorage();
@@ -424,24 +373,25 @@ export class InsulinStore {
   }
 
   /**
-   * Cambia el `timeIso` de la ÚLTIMA nota del slot de hoy.
-   * No hace nada si no hay notas.
+   * Cambia el `timeIso` de una nota específica del slot, identificada
+   * por su `oldTimeIso`. Usado por la UI cuando el usuario edita la
+   * hora de una nota concreta desde la lista.
+   *
+   * No hace nada si no se encuentra una nota con ese timeIso
+   * (mismo slot, mismo día).
    */
-  updateLastNoteTime(slotId: string, newTimeIso: string) {
+  updateNoteTimeByTimestamp(slotId: string, oldTimeIso: string, newTimeIso: string) {
     this.assertNotFuture(newTimeIso);
     const dateYmd = this._today();
     this._noteEntries.update(notes => {
-      let lastIdx = -1;
-      for (let i = notes.length - 1; i >= 0; i--) {
-        const n = notes[i];
-        if (n.dateYmd === dateYmd && n.slotId === slotId) {
-          lastIdx = i;
-          break;
-        }
-      }
-      if (lastIdx < 0) return notes;
+      const idx = notes.findIndex(
+        n => n.dateYmd === dateYmd
+          && n.slotId === slotId
+          && n.timeIso === oldTimeIso
+      );
+      if (idx < 0) return notes;
       const next = [...notes];
-      next[lastIdx] = { ...next[lastIdx], timeIso: newTimeIso };
+      next[idx] = { ...next[idx], timeIso: newTimeIso };
       return next;
     });
     this.saveToStorage();

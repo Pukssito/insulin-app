@@ -249,7 +249,11 @@ export class SlotCardComponent {
     const { data } = await popover.onDidDismiss();
     if (data?.timeIso) {
       try {
-        this.store.updateLastNoteTime(this.slot().id, data.timeIso);
+        this.store.updateNoteTimeByTimestamp(
+          this.slot().id,
+          oldTimeIso,
+          data.timeIso
+        );
       } catch (err: any) {
         await this.presentError(err?.message ?? 'No se pudo guardar la hora');
       }
